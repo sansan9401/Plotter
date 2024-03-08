@@ -77,8 +77,8 @@ public:
   TH1* GetHistSys(Hists& hists,TString sysname);
   void EvalHistSys(Hists& hists,TString sysname,TString option);
   void EvalHistSyss(Plot& p);
-  TMatrixD GetCov(Hists& hists,TString sysname);
-  TMatrixD GetCov(Hists& hists0,Hists& hists1,TString sysname);
+  TMatrixD GetCov(Hists& hists,TString sysname,TString option="");
+  TMatrixD GetCov(Hists& hists0,Hists& hists1,TString sysname,TString option="");
   TMatrixD GetCov(TH1* central,const vector<const TH1*>& variations,Systematic::Type type);
   static double Trace(TMatrixD mat);
   int AddError(TH1* hist,TH1* sys) const;
@@ -86,15 +86,16 @@ public:
   void AddSystematic(TString key,TString title,Systematic::Type type,TString includes,TString tag="");
 
   //Canvas
-  void DrawCompare(Plot p);
-  vector<Hists> GetRatioHists(Plot p);
-  void DrawRatio(Plot p);
-  void DrawDiff(Plot p);
-  void DrawSig(Plot p);
-  void DrawCompareAndRatio(Plot p);
-  void DrawCompareAndDiff(Plot p);
-  void DrawCompareAndSig(Plot p);
-  void DrawDoubleRatio(Plot& plot);
+  virtual void DrawCompare(Plot p);
+  virtual vector<Hists> GetRatioHists(Plot p);
+  virtual void DrawRatio(Plot p);
+  virtual void DrawDiff(Plot p);
+  virtual void DrawSig(Plot p);
+  virtual void DrawError(Plot p);
+  virtual void DrawCompareAndRatio(Plot p);
+  virtual void DrawCompareAndDiff(Plot p);
+  virtual void DrawCompareAndSig(Plot p);
+  virtual void DrawDoubleRatio(Plot& plot);
   virtual TCanvas* DrawPlot(Plot plotkey,TString additional_option="");
   virtual TCanvas* DrawPlot(TString plotkey,TString additional_option="");
   virtual TCanvas* DrawPlot(vector<TH1*> hists,TString additional_option="");
@@ -1229,7 +1230,7 @@ void Plotter::EvalHistSyss(Plot& p){
     // }
   }
 }
-TMatrixD Plotter::GetCov(Hists& hists0,Hists& hists1,TString sysname){
+TMatrixD Plotter::GetCov(Hists& hists0,Hists& hists1,TString sysname,TString option){
   Hists hists_diff;
   hists_diff.push_back(GetTH1(hists1.at(0)));
   hists_diff.at(0)->Add(hists0.at(0),-1);
@@ -1237,9 +1238,9 @@ TMatrixD Plotter::GetCov(Hists& hists0,Hists& hists1,TString sysname){
     hists_diff.variations[suffix]=GetTH1(hists1[suffix]);
     hists_diff.variations[suffix]->Add(hists0[suffix],-1);
   }
-  return GetCov(hists_diff,sysname);
+  return GetCov(hists_diff,sysname,option);
 }
-TMatrixD Plotter::GetCov(Hists& hists, TString sysname){
+TMatrixD Plotter::GetCov(Hists& hists, TString sysname, TString option){
   int ifirst=hists.at(0)->GetXaxis()->GetFirst();
   int ilast=hists.at(0)->GetXaxis()->GetLast();
   TMatrixD cov(ifirst,ilast,ifirst,ilast);
@@ -1254,7 +1255,7 @@ TMatrixD Plotter::GetCov(Hists& hists, TString sysname){
       if(systematics.find(this_key)==systematics.end()){
 	PError("[Plotter::GetCov] no systematic with key "+this_key);
       }else{
-	cov+=GetCov(hists,this_key);
+	cov+=GetCov(hists,this_key,option);
       }
     }
   }else{
@@ -1263,6 +1264,19 @@ TMatrixD Plotter::GetCov(Hists& hists, TString sysname){
       variations.push_back(hists[suffix]);
     }
     cov=GetCov(hists.at(0),variations,systematic.type);
+    if(option.Contains("decotest")&&(sysname=="dymuf"||sysname=="dymur")){
+      double val=0.04;
+      if(option.Contains("decotest:")){
+	TString sval=option(TRegexp("decotest:[0-9.]*"));
+	val=TString(sval(9,999)).Atof();
+      }
+      for(int irow=cov.GetRowLwb(),nrow=cov.GetRowUpb()+1;irow<nrow;irow++){
+	for(int icol=cov.GetColLwb(),ncol=cov.GetColUpb()+1;icol<ncol;icol++){
+	  if((irow-1)/6==(icol-1)/6) continue;
+	  cov[icol][irow]*=1-val;
+	}
+      }	     
+    }
   }
   return cov;
 }
@@ -1381,6 +1395,30 @@ int Plotter::AddError(TH1* hist,TH1* sys) const {
 void Plotter::DrawHistograms(Plot p){
   if(!p.hists.size()) return;
 
+  vector<double> bins;
+  int ifirst=-1,ilast=-1;
+  if(p.option.Contains("logx")){
+    for(const vector<TH1*>& hists:p.hists){
+      if(hists.size()&&hists.at(0)){
+	TAxis* axis=hists.at(0)->GetXaxis();
+	if(hists.at(0)->InheritsFrom("THStack")){
+	  THStack* hstack=(THStack*)hists.at(0);
+	  if(!hstack->GetHists()->GetSize()||!hstack->GetHists()->At(0)) continue;
+	  axis=((TH1*)hstack->GetHists()->At(0))->GetXaxis();
+	}
+  	bins=GetAxisVector(axis);
+  	if(bins[axis->GetFirst()-1]==0){
+	  ifirst=axis->GetFirst();
+	  ilast=axis->GetLast();
+  	  bins[ifirst-1]=bins[ifirst]*bins[ifirst]/bins[ifirst+1]+1e-6;
+  	}else{
+	  bins.clear();
+	}
+	break;
+      }
+    }
+  }
+
   for(Hists& hists:p.hists){
     if(hists.entity){
       for(int i=0,n=hists.size();i<n;i++){
@@ -1392,17 +1430,25 @@ void Plotter::DrawHistograms(Plot p){
   for(const vector<TH1*>& hists:p.hists){
     if(hists.size()&&hists.at(0)){
       if(hists.at(0)->InheritsFrom("THStack")){
+	TH1* hist_sum=GetTH1(hists.at(0));
+	if(bins.size()){
+	  hist_sum->SetBins(bins.size()-1,&bins[0]);
+	  hist_sum->GetXaxis()->SetRange(ifirst,ilast);
+	}
 	if(GetAxisParent()){
 	  hists.at(0)->Draw("same");
-	  TH1* hist_sum=GetTH1(hists.at(0));
 	  hist_sum->Draw(TString("same ")+hists.at(0)->GetOption());
 	}else{
-	  TH1* hist_sum=GetTH1(hists.at(0));
 	  hist_sum->Draw(hists.at(0)->GetOption());
 	  hists.at(0)->Draw("same");
 	}
 	for(int i=hists.size()-1;i>0;i--){
-	  hists.at(i)->Draw(TString("same ")+hists.at(i)->GetOption());
+	  TH1* hist=(TH1*)hists.at(i)->Clone();
+	  if(bins.size()){
+	    hist->SetBins(bins.size()-1,&bins[0]);
+	    hist->GetXaxis()->SetRange(ifirst,ilast);
+	  }
+	  hist->Draw(TString("same ")+hist->GetOption());
 	}
       }
     }
@@ -1412,10 +1458,15 @@ void Plotter::DrawHistograms(Plot p){
     if(hists.size()&&hists.at(0)){
       if(!hists.at(0)->InheritsFrom("THStack")&&hists.at(0)->GetFillColor()>0){
 	for(int i=hists.size()-1;i>=0;i--){
-	  if(GetAxisParent()) hists.at(i)->Draw(TString("same ")+hists.at(i)->GetOption());
+	  TH1* hist=(TH1*)hists.at(i)->Clone();
+	  if(bins.size()){
+	    hist->SetBins(bins.size()-1,&bins[0]);
+	    hist->GetXaxis()->SetRange(ifirst,ilast);
+	  }
+	  if(GetAxisParent()) hist->Draw(TString("same ")+hist->GetOption());
 	  else{
-	    hists.at(i)->Draw(hists.at(i)->GetOption());
-	    hists.at(i)->SetStats(0);
+	    hist->Draw(hist->GetOption());
+	    hist->SetStats(0);
 	  }
 	}
       }
@@ -1426,10 +1477,15 @@ void Plotter::DrawHistograms(Plot p){
     if(hists.size()&&hists.at(0)){
       if(!hists.at(0)->InheritsFrom("THStack")&&hists.at(0)->GetFillColor()==0){
 	for(int i=hists.size()-1;i>=0;i--){
-	  if(GetAxisParent()) hists.at(i)->Draw(TString("same ")+hists.at(i)->GetOption());
+	  TH1* hist=(TH1*)hists.at(i)->Clone();
+	  if(bins.size()){
+	    hist->SetBins(bins.size()-1,&bins[0]);
+	    hist->GetXaxis()->SetRange(ifirst,ilast);
+	  }
+	  if(GetAxisParent()) hist->Draw(TString("same ")+hist->GetOption());
 	  else{
-	    hists.at(i)->Draw(hists.at(i)->GetOption());
-	    hists.at(i)->SetStats(0);
+	    hist->Draw(hist->GetOption());
+	    hist->SetStats(0);
 	  }
 	}
       }
@@ -1467,9 +1523,6 @@ void Plotter::DrawCompare(Plot p){
   if(p.option.Contains("logx")){
     gPad->SetLogx();
     axisparent->GetXaxis()->SetMoreLogLabels();
-    if(axisparent->GetXaxis()->GetBinLowEdge(axisparent->GetXaxis()->GetFirst())==0){
-      axisparent->GetXaxis()->SetRange(axisparent->GetXaxis()->GetFirst()+1,axisparent->GetXaxis()->GetLast());
-    }
   }
   if(p.option.Contains("logy")){
     pair<double,double> minmax=GetMinMax(p.hists,"pos");
@@ -1496,7 +1549,7 @@ void Plotter::DrawCompare(Plot p){
   axisparent->SetTitle(toptitle);
 
   gPad->SetFillStyle(0);
-  gPad->RedrawAxis();
+  //gPad->RedrawAxis(); //it should be done after SetNdivisions
   gPad->Update();
   if(gPad->GetPrimitive("title")){
     TPaveText* pt=(TPaveText*)gPad->GetPrimitive("title");
@@ -1579,27 +1632,34 @@ void Plotter::DrawDiff(Plot p){
 
   TH1* base=NULL;
   TString baseopt=p.option("base:[0-9]*");
-  if(baseopt!="") base=GetTH1(p.hists[((TString)baseopt(5,100)).Atoi()][0]);
-  else if(p.hists.size()==2) base=GetTH1(p.hists[1][0]);
-  else base=GetTH1(p.hists[0][0]);  
-  for(int i=0;i<base->GetNbinsX()+2;i++){
-    base->SetBinError(i,0);
-  }
+  int ibase=0;
+  if(baseopt!="") ibase=((TString)baseopt(5,100)).Atoi();
+  else if(p.hists.size()==2) ibase=1;
+  else ibase=0;  
+  base=GetTH1(p.hists[ibase][0]);
 
   vector<Hists> hists_new;
-  for(const vector<TH1*>& this_hists:p.hists){
-    Hists this_hists_new;
-    for(const auto& hist:this_hists){
-      TH1* hist_new=NULL;
-      if(hist){
-	hist_new=GetTH1(hist);
-	hist_new->Add(base,-1);
-      }
-      this_hists_new.push_back(hist_new);
+  if(base){
+    for(int i=0;i<base->GetNbinsX()+2;i++){
+      base->SetBinError(i,0);
     }
-    hists_new.push_back(move(this_hists_new));
+    for(const Hists& this_hists:p.hists){
+      Hists this_hists_new=this_hists.Clone();
+      this_hists_new.Add(base,-1);
+      hists_new.push_back(move(this_hists_new));
+    }
+    if(p.option.Contains("movesys")){
+      if(entries.size()!=2){
+        PError(Form("[Plotter::DrawDiff] movesys fail entries.size()=%zu!=2",entries.size()));
+      }
+      Hists hists_temp=p.hists[1-ibase].Clone();
+      hists_temp.Add(p.hists[ibase],-1);
+      hists_temp.Add(hists_new[1-ibase].at(0),-1);
+      hists_new[1-ibase].variations.clear();
+      hists_new[ibase].variations=hists_temp.variations;
+    }
+    delete base;
   }  
-  delete base;
 
   p.hists=hists_new;
   DrawCompare(p);
@@ -1623,12 +1683,11 @@ void Plotter::DrawSig(Plot p){
 
   TH1* base=NULL;
   TString baseopt=p.option("base:[0-9]*");
-  if(baseopt!="") base=GetTH1(p.hists[((TString)baseopt(5,100)).Atoi()].back());
-  else if(p.hists.size()==2) base=GetTH1(p.hists[1].back());
-  else if(p.hists.size()==1){
-    base=GetTH1(p.hists[0].back());
-    base->Reset();
-  }else base=GetTH1(p.hists[0].back());
+  int ibase=0;
+  if(baseopt!="") ibase=((TString)baseopt(5,100)).Atoi();
+  else if(p.hists.size()==2) ibase=1;
+  else ibase=0;
+  base=GetTH1(p.hists[ibase][0]);
 
   TH1* sigma1=(TH1*)base->Clone("sigma1");
   sigma1->SetStats(0);
@@ -1652,24 +1711,35 @@ void Plotter::DrawSig(Plot p){
   sigma2->Draw("e2");
   sigma1->Draw("same e2");  
 
+  if(p.hists.size()>1){
+    vector<Hists> hists_new;
+    for(int i=0,n=p.hists.size();i<n;i++){
+      Hists this_hists_new=p.hists[i].Clone();
+      this_hists_new.Add(p.hists[ibase],-1);
+      hists_new.push_back(this_hists_new);
+    }
+    p.hists=hists_new;
+  }
+  EvalHistSyss(p);
+  
   vector<Hists> hists_new;
-  for(const vector<TH1*>& this_hists:p.hists){
+  for(const Hists& this_hists:p.hists){
     TH1* hist=NULL;
-    for(int i=this_hists.size()-1;i>=0;i--){
-      hist=this_hists.at(i);
+    for(int ih=this_hists.size()-1;ih>=0;ih--){
+      hist=this_hists.at(ih);
       if(hist){
 	hist=GetTH1(hist);
-	for(int i=0;i<hist->GetNbinsX()+2;i++){
+	for(int ib=0;ib<hist->GetNbinsX()+2;ib++){
 	  double content=0;
-	  if(hist->GetBinError(i)||base->GetBinError(i)){
-	    double error=sqrt(pow(hist->GetBinError(i),2)+pow(base->GetBinError(i),2));
-	    content=(hist->GetBinContent(i)-base->GetBinContent(i))/error;
+	  double error=hist->GetBinError(ib);
+	  if(error){
+	    content=hist->GetBinContent(ib)/error;
 	  }
-	  hist->SetBinContent(i,content);
-	  if(content) hist->SetBinError(i,content*1e-30);
-	  else hist->SetBinError(i,0);
+	  hist->SetBinContent(ib,content);
+	  if(content) hist->SetBinError(ib,content*1e-30);
+	  else hist->SetBinError(ib,0);
 	  if(p.blind_xmin||p.blind_xmax){
-	    hist->SetBinContent(i,0);
+	    hist->SetBinContent(ib,0);
 	  }
 	}
 	break;
@@ -1680,7 +1750,8 @@ void Plotter::DrawSig(Plot p){
     hists_new.push_back(move(temp));
   }
   p.hists=hists_new;
-  DrawCompare(p);
+  DrawCompare(p-"sysname");
+
   TH1* axisparent=GetAxisParent();
   if(axisparent){
     if(p.ytitle=="") axisparent->GetYaxis()->SetTitle("Difference (#sigma)");
@@ -1693,6 +1764,95 @@ void Plotter::DrawSig(Plot p){
     }else{
       axisparent->GetYaxis()->SetRangeUser(-3.99,3.99);
       axisparent->GetYaxis()->SetNdivisions(504);
+    }
+  }
+  _depth--;
+}
+void Plotter::DrawError(Plot p){
+  PInfo("[Plotter::DrawError] "+p.option);_depth++;
+  if(!gPad) gROOT->MakeDefCanvas();
+
+  TH1* base=NULL;
+  TString baseopt=p.option("base:[0-9]*");
+  int ibase=0;
+  if(baseopt!="") ibase=((TString)baseopt(5,100)).Atoi();
+  else if(p.hists.size()==2) ibase=1;
+  else ibase=0;
+  base=GetTH1(p.hists[ibase][0]);
+
+  if(p.hists.size()>1){
+    vector<Hists> hists_new;
+    Hists this_hists_new=p.hists[1-ibase].Clone();
+    this_hists_new.Add(p.hists[ibase],-1);
+    hists_new.push_back(this_hists_new);
+    p.hists=hists_new;
+  }
+  p.SetOption("notaddsys");
+  if(p.sysname!=""){
+    if(systematics[p.sysname].type==Systematic::Type::MULTI){
+      p.SetOption("sysdetail");
+    }
+  }
+  EvalHistSyss(p);
+  
+  vector<Hists> hists_new;
+  for(const Hists& this_hists:p.hists){
+    TH1* hist=NULL;
+    vector<int> colors={kBlack,kRed,kGreen,kBlue,kYellow+1,kMagenta,kCyan,kGray,kPink+1,kSpring+1,kAzure+1,kOrange+1,kViolet+1,kTeal+1,kWhite,kGray+1,kGray+3};
+
+    for(int ih=0,nh=this_hists.size();ih<nh;ih++){
+      hist=this_hists.at(ih);
+      if(hist){
+	hist=GetTH1(hist);
+	if(ih==0) hist->SetName("stat.");
+	for(int ib=0;ib<hist->GetNbinsX()+2;ib++){
+	  hist->SetBinContent(ib,pow(hist->GetBinError(ib),2));
+	  hist->SetBinError(ib,0);
+	}
+	hist->SetLineColor(colors[ih%colors.size()]);
+	hist->SetLineWidth(2);
+	hist->SetOption("HIST");
+	hist->SetMarkerSize(0);
+	Hists temp;
+	temp.push_back(hist);
+	hists_new.push_back(move(temp));
+      }
+    }
+  }
+  p.hists=hists_new;
+
+  if(!p.option.Contains("abserror")){
+    TH1* total=NULL;
+    for(Hists& this_hists:p.hists){
+      if(total){
+	total->Add(this_hists[0]);
+      }else{
+	total=GetTH1(this_hists[0]);
+      }
+    }
+    for(Hists& this_hists:p.hists){
+      TH1* hist=this_hists[0];
+      for(int ib=0;ib<hist->GetNbinsX()+2;ib++){
+	hist->SetBinContent(ib,hist->GetBinContent(ib)/total->GetBinContent(ib));
+      }
+    }
+  }
+  DrawCompare(p-"sysname");
+
+  TH1* axisparent=GetAxisParent();
+  if(axisparent){
+    if(p.ytitle==""){
+      if(p.option.Contains("abserror")){
+	axisparent->GetYaxis()->SetTitle("#epsilon^{2}_{i}");
+      }else{
+	axisparent->GetYaxis()->SetTitle("#epsilon^{2}_{i}/#epsilon^{2}_{total}");
+      }
+    }
+    //axisparent->GetYaxis()->UnZoom();
+    if(p.ymin||p.ymax){
+      axisparent->GetYaxis()->SetRangeUser(p.ymin,p.ymax);
+    }else if(!p.option.Contains("abserror")){
+      axisparent->GetYaxis()->SetRangeUser(0,1.);
     }
   }
   _depth--;
@@ -1719,6 +1879,7 @@ void Plotter::DrawCompareAndRatio(Plot p){
     if(p.option.Contains("title++")) pt->SetTextSize(pt->GetTextSize()*1.4);
     else if(p.option.Contains("title+")) pt->SetTextSize(pt->GetTextSize()*1.2);
   }
+  gPad->RedrawAxis();
   gPad->Update();
   gPad->Modified();
   
@@ -1891,6 +2052,7 @@ TCanvas* Plotter::DrawPlot(Plot p,TString additional_option){
   else if(p.type==Plot::Type::Ratio) DrawRatio(p);
   else if(p.type==Plot::Type::Diff) DrawDiff(p);
   else if(p.type==Plot::Type::Sig) DrawSig(p);
+  else if(p.type==Plot::Type::Error) DrawError(p);
   else if(p.type==Plot::Type::CompareAndRatio) DrawCompareAndRatio(p);
   else if(p.type==Plot::Type::CompareAndDiff) DrawCompareAndDiff(p);
   else if(p.type==Plot::Type::CompareAndSig) DrawCompareAndSig(p);
@@ -1919,8 +2081,8 @@ TCanvas* Plotter::DrawPlot(Plot p,TString additional_option){
     int ilast=hist0->GetXaxis()->GetLast();
     TMatrixD cov_syst(ifirst,ilast,ifirst,ilast);
     if(p.sysname!=""){
-      if(p.hists.size()==1) cov_syst+=GetCov(p.hists[0],p.sysname);
-      if(p.hists.size()==2) cov_syst+=GetCov(p.hists[0],p.hists[1],p.sysname);
+      if(p.hists.size()==1) cov_syst+=GetCov(p.hists[0],p.sysname,p.option);
+      if(p.hists.size()==2) cov_syst+=GetCov(p.hists[0],p.hists[1],p.sysname,p.option);
     }
     TH1D* hist1=NULL;
     if(p.hists.size()>1){
@@ -1990,7 +2152,7 @@ TCanvas* Plotter::DrawPlot(Plot p,TString additional_option){
 	  down->SetBinContent(icov,GetChi2(hist0,hist1,cov-cov_syst));
 	}else{
 	  for(const auto& key:systematics[p.sysname].keys){
-	    TMatrixD this_cov=GetCov(p.hists[0],p.hists[1],key);
+	    TMatrixD this_cov=GetCov(p.hists[0],p.hists[1],key,p.option);
 	    nominal->GetXaxis()->SetBinLabel(++icov,key);
 	    nominal->SetBinContent(icov,chi2);
 	    up->SetBinContent(icov,GetChi2(hist0,hist1,cov+3.*this_cov));
@@ -2057,6 +2219,7 @@ TCanvas* Plotter::DrawPlot(vector<TH1*> hists,TString additional_option){
   else if(p.type==Plot::Type::Ratio) DrawRatio(p);
   else if(p.type==Plot::Type::Diff) DrawDiff(p);
   else if(p.type==Plot::Type::Sig) DrawSig(p);
+  else if(p.type==Plot::Type::Error) DrawError(p);
   else if(p.type==Plot::Type::CompareAndRatio) DrawCompareAndRatio(p);
   else if(p.type==Plot::Type::CompareAndDiff) DrawCompareAndDiff(p);
   else if(p.type==Plot::Type::CompareAndSig) DrawCompareAndSig(p);
@@ -2085,8 +2248,8 @@ TCanvas* Plotter::DrawPlot(vector<TH1*> hists,TString additional_option){
     int ilast=hist0->GetXaxis()->GetLast();
     TMatrixD cov_syst(ifirst,ilast,ifirst,ilast);
     if(p.sysname!=""){
-      if(p.hists.size()==1) cov_syst+=GetCov(p.hists[0],p.sysname);
-      if(p.hists.size()==2) cov_syst+=GetCov(p.hists[0],p.hists[1],p.sysname);
+      if(p.hists.size()==1) cov_syst+=GetCov(p.hists[0],p.sysname,p.option);
+      if(p.hists.size()==2) cov_syst+=GetCov(p.hists[0],p.hists[1],p.sysname,p.option);
     }
     TH1D* hist1=NULL;
     if(p.hists.size()>1){
@@ -2156,15 +2319,17 @@ void Plotter::SavePlot(TString plotkey,TString option,bool delete_canvas){
     }
     defaultname=path(0,path.Last('.'));
     SaveCanvas(c,path,false);
-    TCanvas *ctemp=(TCanvas*)gROOT->GetListOfCanvases()->FindObject(c->GetName()+TString("_chi2"));
-    if(p.option.Contains("chi2detail")&&c&&ctemp){
-      SaveCanvas(ctemp,path(0,path.Last('.'))+"_chi2"+path(path.Last('.'),path.Length()),false);
-      if(delete_canvas) delete ctemp;
-    }
-    ctemp=(TCanvas*)gROOT->GetListOfCanvases()->FindObject(c->GetName()+TString("_chi2impact"));
-    if(p.option.Contains("chi2detail")&&c&&ctemp){
-      SaveCanvas(ctemp,path(0,path.Last('.'))+"_chi2impact"+path(path.Last('.'),path.Length()),false);
-      if(delete_canvas) delete ctemp;
+    if(c){
+      TCanvas *ctemp=(TCanvas*)gROOT->GetListOfCanvases()->FindObject(c->GetName()+TString("_chi2"));
+      if(p.option.Contains("chi2detail")&&c&&ctemp){
+	SaveCanvas(ctemp,path(0,path.Last('.'))+"_chi2"+path(path.Last('.'),path.Length()),false);
+	if(delete_canvas) delete ctemp;
+      }
+      ctemp=(TCanvas*)gROOT->GetListOfCanvases()->FindObject(c->GetName()+TString("_chi2impact"));
+      if(p.option.Contains("chi2detail")&&c&&ctemp){
+	SaveCanvas(ctemp,path(0,path.Last('.'))+"_chi2impact"+path(path.Last('.'),path.Length()),false);
+	if(delete_canvas) delete ctemp;
+      }
     }
   }
   if(delete_canvas){
@@ -2524,7 +2689,17 @@ TLegend* Plotter::DrawLegendSys(const Plot& p){
       TH1* hist=this_hists.at(i);
       if(hist){
 	if(i==0) hists.push_back(make_pair(TString()+hist->GetName()+" stat.",hist));
-	else hists.push_back(make_pair(TString()+"#oplus "+hist->GetName(),hist));
+	else{
+	  TH1* previous=hists.back().second;
+	  for(int ib=0;ib<hist->GetNcells();ib++){
+	    double val=hist->GetBinContent(ib);
+	    if(val==0) continue;
+	    if( fabs((hist->GetBinError(ib)-previous->GetBinError(ib))/val) > 1e-5 ){
+	      hists.push_back(make_pair(TString()+"#oplus "+hist->GetName(),hist));
+	      break;
+	    }
+	  }
+	}
       }
     }
   }
@@ -2587,18 +2762,20 @@ void Plotter::DrawPreliminary(TPad *c,TString era,TString lumi,TString option){
   }
   if(!option.Contains("noera")&&era!=""){
     latex.SetTextAlign(31);
+    double y=1.05-topmargin;
+    if(option.Contains("nolumi")) y-=0.04;
     if(era=="2016preVFP"){
-      latex.DrawLatex(1-rightmargin,1.05-topmargin,"Run 2016preVFP");
+      latex.DrawLatex(1-rightmargin,y,"Run 2016preVFP");
     }else if(era=="2016postVFP"){
-      latex.DrawLatex(1-rightmargin,1.05-topmargin,"Run 2016postVFP");
+      latex.DrawLatex(1-rightmargin,y,"Run 2016postVFP");
     }else if(era=="2016"){
-      latex.DrawLatex(1-rightmargin,1.05-topmargin,"Run 2016");
+      latex.DrawLatex(1-rightmargin,y,"Run 2016");
     }else if(era=="2017"){
-      latex.DrawLatex(1-rightmargin,1.05-topmargin,"Run 2017");
+      latex.DrawLatex(1-rightmargin,y,"Run 2017");
     }else if(era=="2018"){
-      latex.DrawLatex(1-rightmargin,1.05-topmargin,"Run 2018");
+      latex.DrawLatex(1-rightmargin,y,"Run 2018");
     }else if(era=="Run2"){
-      latex.DrawLatex(1-rightmargin,1.05-topmargin,"Run II");
+      latex.DrawLatex(1-rightmargin,y,"Run II");
     }
   }
   latex.SetTextColor(2);

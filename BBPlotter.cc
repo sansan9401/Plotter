@@ -8,6 +8,7 @@ public:
   virtual TH1* GetHist(const Sample& sample,Plot plot,TString additional_option="");
   virtual void SetupSamples();
   virtual void SetupSystematics();
+  virtual void DrawCompare(Plot p);
 
 };
 BBPlotter::BBPlotter(TString mode_,TString Analyzer_){
@@ -38,6 +39,20 @@ TH1* BBPlotter::GetHist(const Sample& sample,Plot plot,TString additional_option
     return hist;
   }else{
     return Plotter::GetHist(sample,plot);
+  }
+}
+void BBPlotter::DrawCompare(Plot p){
+  Plotter::DrawCompare(p);
+  if(p.histname.Contains("/charge")){
+    TH1* axisparent=GetAxisParent();
+    if(axisparent&&axisparent->GetNbinsX()==4){
+      axisparent->GetXaxis()->SetBinLabel(1,"#minus #minus");
+      axisparent->GetXaxis()->SetBinLabel(2,"#plus #minus");
+      axisparent->GetXaxis()->SetBinLabel(3,"#minus #plus");
+      axisparent->GetXaxis()->SetBinLabel(4,"#plus #plus");
+      axisparent->GetXaxis()->SetTitle("bjet-pair charge");      
+      axisparent->GetXaxis()->SetLabelSize(axisparent->GetXaxis()->GetLabelSize()*2);
+    }
   }
 }
 void BBPlotter::SetupSamples(){
