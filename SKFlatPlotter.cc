@@ -46,11 +46,11 @@ void SKFlatPlotter::SetupSamples(){
     //   if(sub.title.Contains("DYJetsToEE")&&sub.title.Contains("2017"))
     //     sub.weight=0.99;
     // }
-    samples["mg"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_DYJets_MG$");
+    samples["mg"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_.*DYJets_MG$");
+    samples["mg10"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_.*DYJets10to50_MG$");
     samples["amcJet"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_.*DY[0-9]Jets$");
     samples["amcPt"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_.*DYJets_Pt-[0-9]*To[0-9Inf]*$");
     samples["amcM"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_.*DYJets_M-[0-9]*to[0-9Inf]*$");
-    samples["mg"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_.*DYJets_MG$");
   }
 
   samples["data"]=Sample("data","SUM data",kBlack,20)+"muon2016preVFP"+"muon2016postVFP"+"muon2017"+"muon2018"+"electron2016preVFP"+"electron2016postVFP"+"electron2017"+"electron2018";
@@ -70,16 +70,16 @@ void SKFlatPlotter::SetupSamples(){
   //     sub.weight=0.99;
   // }
   samples["mg"]=Sample("#gamma*/Z#rightarrowll","SUM",kRed)+"mg2016preVFP"+"mg2016postVFP"+"mg2017"+"mg2018";
+  samples["mg10"]=Sample("#gamma*/Z#rightarrowll","SUM",kRed)+"mg102016preVFP"+"mg102016postVFP"+"mg102017"+"mg102018";
   samples["amcJet"]=Sample("#gamma*/Z#rightarrowll","SUM",kRed)+"amcJet2016preVFP"+"amcJet2016postVFP"+"amcJet2017"+"amcJet2018";
   samples["amcPt"]=Sample("#gamma*/Z#rightarrowll","SUM",kRed)+"amcPt2016preVFP"+"amcPt2016postVFP"+"amcPt2017"+"amcPt2018";
   samples["amcM"]=Sample("#gamma*/Z#rightarrowll","SUM",kRed)+"amcM2016preVFP"+"amcM2016postVFP"+"amcM2017"+"amcM2018";
-  samples["mg"]=Sample("#gamma*/Z#rightarrowll","SUM",kRed)+"mg2016preVFP"+"mg2016postVFP"+"mg2017"+"mg2018";
 
   samples["tt"]=Sample("t#bar{t}","SUM",kMagenta)+"ttll"+"ttlj"+"ttjj";
   samples["tttw"]=Sample("t#bar{t}, tW","SUM",kMagenta)+"tt"+"tw";
   samples["ttst"]=Sample("t#bar{t}, single top","SUM",kMagenta)+"tt"+"st";
 
-  TString dysamples[]={"amc","amcJet","amcPt","amcM","mg","mi"};
+  TString dysamples[]={"amc","amcJet","amcPt","amcM","mg","mg10","mi"};
   for(auto dysample:dysamples){
     samples["bx_"+dysample]="bx_"%(Sample("#gamma*/Z#rightarrowll (b init)","SUM",kRed-5)+dysample); //temp
     samples["tau_"+dysample]="tau_"%(Sample("#gamma*/Z#rightarrow#tau#tau","SUM dytau",kGreen)+dysample);
@@ -97,12 +97,12 @@ void SKFlatPlotter::SetupSamples(){
   samples["amcM_stack"]=Sample("DY M-binned","STACK",kBlue)+TRegexp("/"+Analyzer+SkimTree+"_.*DYJets_M-[0-9]*to[0-9Inf]*$");
   for(auto& sub:samples["amcM_stack"].subs) sub.title=sub.title(TRegexp("M-[0-9]*to[0-9Inf]*"));  
 
-  samples["qcdss_ee"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][eEl]&&!0bjet&&!nbjet qcdss_ee",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.043;
-  samples["qcdss_ee_0bjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][eEl]&&0bjet qcdss_ee_0bjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.044;
-  samples["qcdss_ee_nbjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][eEl]&&nbjet qcdss_ee_nbjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.007;
-  samples["qcdss_mm"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[mM][mMu]&&!0bjet&&!nbjet qcdss_mm",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*2.252;
-  samples["qcdss_mm_0bjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[mM][mMu]&&0bjet qcdss_mm_0bjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*2.284;
-  samples["qcdss_mm_nbjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[mM][mMu]&&nbjet qcdss_mm_nbjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.192;
+  samples["qcdss_ee"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][eEl]&&!0bjet&&!nbjet qcdss_ee",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa"-"mg10")*1.011;
+  samples["qcdss_ee_0bjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][eEl]&&0bjet qcdss_ee_0bjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa"-"mg10")*1.010;
+  samples["qcdss_ee_nbjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][eEl]&&nbjet qcdss_ee_nbjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa"-"mg10")*1.018;
+  samples["qcdss_mm"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[mM][mMu]&&!0bjet&&!nbjet qcdss_mm",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*2.276;
+  samples["qcdss_mm_0bjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[mM][mMu]&&0bjet qcdss_mm_0bjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*2.304;
+  samples["qcdss_mm_nbjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[mM][mMu]&&nbjet qcdss_mm_nbjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.158;
   samples["qcdss_em"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][mM]&&!0bjet&&!nbjet qcdss_em",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.000;
   samples["qcdss_em_0bjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][mM]&&0bjet qcdss_em_0bjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.000;
   samples["qcdss_em_nbjet"]="ss_"%(Sample("QCD multi-jet (SS-method)","SUM filter:[eE][mM]&&nbjet qcdss_em_nbjet",kCyan)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa")*1.000;
@@ -118,8 +118,9 @@ void SKFlatPlotter::SetupSamples(){
 
   samples["qcdss"]=Sample("QCD multi-jet","SUM",Style(kCyan),Style(kCyan,-1,3004,"e2"))+"qcdss_ee"+"qcdss_ee_0bjet"+"qcdss_ee_nbjet"+"qcdss_mm"+"qcdss_mm_0bjet"+"qcdss_mm_nbjet"+"qcdss_em"+"qcdss_em_0bjet"+"qcdss_em_nbjet"+"qcdss_me"+"qcdss_me_0bjet"+"qcdss_me_nbjet";
 
-  samples["fake_mi"]="fake_"%(Sample("QCD multi-jet (TF method)","SUM",Style(kRed),Style(kRed,-1,3005,"e2"))+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa");
+  samples["fake_mi"]="fake_"%(Sample("QCD multi-jet (TF method)","SUM qcdtf",Style(kOrange),Style(kOrange,-1,3005,"e2"))+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa");
   samples["qcdtf"]=samples["fake_mi"];
+  samples["qcdtf"].title="QCD multi-jet";
   samples["fakecpt_mi"]="fakecpt_"%(Sample("QCD multi-jet (TF, cone pT)","SUM",kBlue)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa");
   samples["fakempt_mi"]="fakempt_"%(Sample("QCD multi-jet (TF, modified pT)","SUM",kGreen)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa");
   samples["fakelj_mi"]="fakelj_"%(Sample("QCD multi-jet (TF, lj)","SUM",kMagenta)+"data"-"mi"-"tau_mi"-"vv"-"wjets"-"ttst"-"aa");
@@ -361,16 +362,18 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("roccor","Roch. cor.",Systematic::Type::MULTI,"roccor_noresidual roccor_residual");
   
 
-  AddSystematic("qcdss_norm_ee","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.032","qcdss_ee");
-  AddSystematic("qcdss_norm_ee_0bjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.031","qcdss_ee_0bjet");
-  AddSystematic("qcdss_norm_ee_nbjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.057","qcdss_ee_nbjet");
-  AddSystematic("qcdss_norm_mm","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.135","qcdss_mm");
-  AddSystematic("qcdss_norm_mm_0bjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.124","qcdss_mm_0bjet");
-  AddSystematic("qcdss_norm_mm_nbjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.451","qcdss_mm_nbjet");
+  AddSystematic("qcdss_norm_ee","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.002","qcdss_ee");
+  AddSystematic("qcdss_norm_ee_0bjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.002","qcdss_ee_0bjet");
+  AddSystematic("qcdss_norm_ee_nbjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.026","qcdss_ee_nbjet");
+  AddSystematic("qcdss_norm_mm","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.126","qcdss_mm");
+  AddSystematic("qcdss_norm_mm_0bjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.118","qcdss_mm_0bjet");
+  AddSystematic("qcdss_norm_mm_nbjet","SS method norm.",Systematic::Type::ENVELOPE,"scale:1.035","qcdss_mm_nbjet");
   AddSystematic("qcdss_norm","SS method norm.",Systematic::Type::MULTI,"qcdss_norm_ee qcdss_norm_ee_0bjet qcdss_norm_ee_nbjet qcdss_norm_mm qcdss_norm_mm_0bjet qcdss_norm_mm_nbjet");
   AddSystematic("qcdss_prompt","SS method prompt contam.",Systematic::Type::ENVELOPE,"scale:1.05","qcdss_prompt");
   AddSystematic("qcdss","SS method",Systematic::Type::MULTI,"qcdss_norm qcdss_prompt");
-  AddSystematic("qcdtf","TF method",Systematic::Type::ENVELOPE,"_faketf_up _faketf_down");
+  AddSystematic("qcdtf_sys1","TF method",Systematic::Type::ENVELOPE,"_fakeTF_up _fakeTF_down","qcdtf");
+  AddSystematic("qcdtf_sys2","TF method",Systematic::Type::ENVELOPE,"scale:1.3","qcdtf");
+  AddSystematic("qcdtf_sys3","TF method",Systematic::Type::ENVELOPE,"altsample","qcdtf");
   AddSystematic("qcd","data-driven QCD est.",Systematic::Type::MULTI,"qcdss qcdtf");
 
   AddSystematic("dyscale","DY #mu_{R}/#mu_{F}",Systematic::Type::ENVELOPE,"_scalevariation0 _scalevariation1 _scalevariation2 _scalevariation3 _scalevariation4 _scalevariation6 _scalevariation8","dy");
@@ -421,22 +424,22 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("lumi","lumi.",Systematic::Type::MULTI,"lumi2016 lumi2017 lumi2018 lumi678 lumi78");
 
 
-  AddSystematic("sys","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF qcdss JEC lumi xsec electronenergy muonmomentum");
+  AddSystematic("sys","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF qcd JEC lumi xsec electronenergy muonmomentum");
   AddSystematic("totalsys","syst. unc.",Systematic::Type::MULTI,"sys dytheory tttheory");
 
-  AddSystematic("totalsys_detail","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcdss JEC lumi xsec electronenergy_noresidual electronenergy_residual muonmomentum_noresidual muonmomentum_residual dyalphaS dymuf dymur dypdf zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0 tttheory");
+  AddSystematic("totalsys_detail","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec electronenergy_noresidual electronenergy_residual muonmomentum_noresidual muonmomentum_residual dyalphaS dymuf dymur dypdf zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0 tttheory");
 
-  AddSystematic("etc_0bjet","etc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcdss JEC lumi xsec dyalphaS zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0 tttheory");
+  AddSystematic("etc_0bjet","etc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec dyalphaS zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0 tttheory");
   AddSystematic("totalsys_table_0bjet","syst. unc.",Systematic::Type::MULTI,"dypdf dymurmuf roccor etc_0bjet");
 
-  AddSystematic("etc_nbjet","etc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag CFSF efficiencySF_noresidual efficiencySF_residual qcdss JEC lumi xsec");
+  AddSystematic("etc_nbjet","etc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec");
   AddSystematic("totalsys_table_nbjet","syst. unc.",Systematic::Type::MULTI,"dytheory tttheory bcharge etc_nbjet");
 
 
   AddSystematic("test","totalsys",Systematic::Type::MULTI,"btag dyscale ttscale");
 
 
-  AddSystematic("sys_roccor_era","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag CFSF efficiencySF qcdss JEC lumi xsec electronenergy_era muonmomentum_era");
+  AddSystematic("sys_roccor_era","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag CFSF efficiencySF qcd JEC lumi xsec electronenergy_era muonmomentum_era");
   AddSystematic("totalsys_roccor_era","syst. unc.",Systematic::Type::MULTI,"sys_roccor_era dytheory tttheory");
 
 }

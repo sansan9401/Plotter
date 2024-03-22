@@ -1371,7 +1371,7 @@ int Plotter::AddError(TH1* hist,TH1* sys) const {
     delete sys;
     return ret;
   }
-  for(int i=1;i<hist->GetNbinsX()+1;i++){
+  for(int i=0;i<hist->GetNbinsX()+2;i++){
     if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*1000000>fabs(hist->GetBinContent(i))){
       PError("[Plotter::AddError] systematic hist is wrong");
       std::cout.precision(20);
@@ -1380,7 +1380,7 @@ int Plotter::AddError(TH1* hist,TH1* sys) const {
       return -1;
     }
   }
-  for(int i=1;i<hist->GetNbinsX()+1;i++){
+  for(int i=0;i<hist->GetNbinsX()+2;i++){
     double err1=hist->GetBinError(i);
     double err2=sys->GetBinError(i);
     hist->SetBinError(i,sqrt(err1*err1+err2*err2));
@@ -1407,7 +1407,7 @@ void Plotter::DrawHistograms(Plot p){
 	  axis=((TH1*)hstack->GetHists()->At(0))->GetXaxis();
 	}
   	bins=GetAxisVector(axis);
-  	if(bins[axis->GetFirst()-1]==0){
+  	if(axis->GetFirst()>0&&bins[axis->GetFirst()-1]==0){
 	  ifirst=axis->GetFirst();
 	  ilast=axis->GetLast();
   	  bins[ifirst-1]=bins[ifirst]*bins[ifirst]/bins[ifirst+1]+1e-6;
