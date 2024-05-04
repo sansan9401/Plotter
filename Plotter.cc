@@ -21,6 +21,7 @@ public:
   vector<Sample> entries;
   map<TString,Systematic> systematics;
   map<TString,Plot> plots;
+  map<TString,TFile*> files_cache;
   map<TString,set<TString>> histkeys_cache;
   TDirectory *pdir=NULL;
   TString mode;
@@ -390,20 +391,37 @@ TH1* Plotter::GetHistFromSample(const Sample& sample,const Plot& pp,TString addi
       }
     }
   }else if(sample.IsSum()){
-    for(auto [reg,newstr]:sample.replace) TPRegexp(reg).Substitute(p.histname,newstr);
-    for(const auto& sub:sample.subs){
-      TH1* this_hist=GetHistFromSample(sub,p);
-      if(this_hist){
-	if(!hist){
+    if(p.option.Contains("altsample")){
+      TString altsampleoption=p.option(TRegexp("altsample[^ ]*"));
+      vector<TString> words=Split(altsampleoption,":");
+      if(words.size()!=3){
+	PError("[Plotter::GetHistFromSample] wrong altsample option");
+	return NULL;
+      }
+      if(sample.HasTag(words[2],false)){
+	if(sample.alts.find(words[1])==sample.alts.end()){
+	  PError("[Plotter::GetHistFromSample] no altsample '"+words[1]+"' in sample "+sample.title);
+	  return NULL;
+	}
+	hist=GetHistFromSample(sample.GetAltSample(words[1]),p-"altsample");
+      }
+    }
+    if(!hist){
+      for(auto [reg,newstr]:sample.replace) TPRegexp(reg).Substitute(p.histname,newstr);
+      for(const auto& sub:sample.subs){
+	TH1* this_hist=GetHistFromSample(sub,p);
+	if(this_hist){
+	  if(!hist){
 	  hist=(TH1*)this_hist->Clone();
 	  hist->SetDirectory(pdir);
 	  hist->Reset();
+	  }
+	  hist->Add(this_hist);
+	  delete this_hist;
 	}
-	hist->Add(this_hist);
-	delete this_hist;
       }
+      if(hist) hist->Scale(sample.weight);
     }
-    if(hist) hist->Scale(sample.weight);
   }else if(p.option.Contains("absx")){
     Plot temp_plot=p-"absx";
     TH1* temp_hist=GetHistFromSample(sample,temp_plot);
@@ -742,9 +760,16 @@ TH1* Plotter::GetHistFromFile(TString filename,TString histname){
       }
     }
   }else{
-    TFile *f=TFile::Open(filename);
-    if(f->IsZombie()) PError("It is a zombie file");
-    if(!f->IsOpen()) PError("Cannot open the file");
+    TFile *f=NULL;
+    auto find=files_cache.find(filename);
+    if(find==files_cache.end()){
+      f=TFile::Open(filename);
+      if(f->IsZombie()) PError("It is a zombie file");
+      if(!f->IsOpen()) PError("Cannot open the file");
+      files_cache[filename]=f;
+    }else{
+      f=find->second;
+    }
     hist=(TH1*)f->Get(histname);
     if(hist){
       if(hist->InheritsFrom("TH1")){
@@ -753,8 +778,6 @@ TH1* Plotter::GetHistFromFile(TString filename,TString histname){
 	PInfo("[Plotter::GetHistFromFile] get "+histname+" from "+filename);
       }else hist=NULL;
     }
-    f->Close();
-    delete f;
   }
   if(!hist)
     PDebug("[Plotter::GetHistFromFile] no "+histname+" in "+filename);
@@ -1030,6 +1053,10 @@ TString Plotter::Variation2Suffix(TString variation){
     suffix="_"+p.replace_tag+p.replace_new;
   }else if(p.scales.size()){
     suffix="_"+p.scales[0].second+"_scale";
+  }else if(p.option.Contains("altsample")){
+    TString altsampleoption=p.option(TRegexp("altsample[^ ]*"));
+    vector<TString> words=Split(altsampleoption,":");
+    suffix="_"+words[2]+"_altsample_"+words[1];
   }else{
     PError("[Plotter::GetSystematicSuffixes] Unknown variation "+variation);
     exit(1);
@@ -1426,6 +1453,45 @@ void Plotter::DrawHistograms(Plot p){
       }
     }
   }
+  
+  if(p.option.Contains("sigband")){
+    TH1* sigma1=NULL;
+    for(Hists& hists:p.hists){
+      for(int i=0,n=hists.size();i<n;i++){
+	if(hists.at(i)){
+	  sigma1=GetTH1(hists.at(i));
+	  sigma1->SetName("sigma1");
+	  if(bins.size()){
+	    sigma1->SetBins(bins.size()-1,&bins[0]);
+	    sigma1->GetXaxis()->SetRange(ifirst,ilast);
+	  }
+	  break;
+	}
+      }
+    }
+    if(sigma1){
+      sigma1->SetStats(0);
+      sigma1->SetDirectory(pdir);
+      sigma1->SetTitle("#pm 1 #sigma");
+      sigma1->SetFillColor(kGreen);
+      sigma1->SetFillStyle(3001);
+      sigma1->SetMarkerSize(0);
+      for(int i=0;i<sigma1->GetNbinsX()+2;i++){
+	sigma1->SetBinContent(i,0);
+	sigma1->SetBinError(i,1);
+      }
+      TH1* sigma2=(TH1*)sigma1->Clone("sigma2");
+      sigma2->SetStats(0);
+      sigma2->SetDirectory(pdir);
+      for(int i=0;i<sigma2->GetNbinsX()+2;i++){
+	sigma2->SetBinError(i,2);
+      }
+      sigma2->SetTitle("#pm 2 #sigma");
+      sigma2->SetFillColor(kYellow);
+      sigma2->Draw("e2");
+      sigma1->Draw("same e2");
+    }
+  }
 
   for(const vector<TH1*>& hists:p.hists){
     if(hists.size()&&hists.at(0)){
@@ -1689,28 +1755,6 @@ void Plotter::DrawSig(Plot p){
   else ibase=0;
   base=GetTH1(p.hists[ibase][0]);
 
-  TH1* sigma1=(TH1*)base->Clone("sigma1");
-  sigma1->SetStats(0);
-  sigma1->SetDirectory(pdir);
-  sigma1->SetTitle("#pm 1 #sigma");
-  sigma1->SetFillColor(kGreen);
-  sigma1->SetFillStyle(3001);
-  sigma1->SetMarkerSize(0);
-  for(int i=0;i<sigma1->GetNbinsX()+2;i++){
-    sigma1->SetBinContent(i,0);
-    sigma1->SetBinError(i,1);
-  }
-  TH1* sigma2=(TH1*)sigma1->Clone("sigma2");
-  sigma2->SetStats(0);
-  sigma2->SetDirectory(pdir);
-  for(int i=0;i<sigma2->GetNbinsX()+2;i++){
-    sigma2->SetBinError(i,2);
-  }
-  sigma2->SetTitle("#pm 2 #sigma");
-  sigma2->SetFillColor(kYellow);
-  sigma2->Draw("e2");
-  sigma1->Draw("same e2");  
-
   if(p.hists.size()>1){
     vector<Hists> hists_new;
     for(int i=0,n=p.hists.size();i<n;i++){
@@ -1750,7 +1794,8 @@ void Plotter::DrawSig(Plot p){
     hists_new.push_back(move(temp));
   }
   p.hists=hists_new;
-  DrawCompare(p-"sysname");
+  DrawCompare(p-"sysname"+"sigband");
+  
 
   TH1* axisparent=GetAxisParent();
   if(axisparent){
@@ -1821,7 +1866,7 @@ void Plotter::DrawError(Plot p){
   }
   p.hists=hists_new;
 
-  if(!p.option.Contains("abserror")){
+  if(p.option.Contains("relerror")){
     TH1* total=NULL;
     for(Hists& this_hists:p.hists){
       if(total){
@@ -1842,17 +1887,17 @@ void Plotter::DrawError(Plot p){
   TH1* axisparent=GetAxisParent();
   if(axisparent){
     if(p.ytitle==""){
-      if(p.option.Contains("abserror")){
-	axisparent->GetYaxis()->SetTitle("#epsilon^{2}_{i}");
-      }else{
+      if(p.option.Contains("relerror")){
 	axisparent->GetYaxis()->SetTitle("#epsilon^{2}_{i}/#epsilon^{2}_{total}");
+      }else{
+	axisparent->GetYaxis()->SetTitle("#epsilon^{2}_{i}");
       }
     }
     //axisparent->GetYaxis()->UnZoom();
     if(p.ymin||p.ymax){
       axisparent->GetYaxis()->SetRangeUser(p.ymin,p.ymax);
-    }else if(!p.option.Contains("abserror")){
-      axisparent->GetYaxis()->SetRangeUser(0,1.);
+    }else if(p.option.Contains("relerror")){
+      axisparent->GetYaxis()->SetRangeUser(0,1.09);
     }
   }
   _depth--;

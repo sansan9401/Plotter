@@ -3,7 +3,7 @@
 #define __AFBSYSTPLOTTER_CC__
 class AFBSystPlotter:public SKFlatPlotter{
 public:
-  AFBSystPlotter(TString mode_="data ^mi+tau_mi+vv+wjets+tt+st+qcdtf+aa",TString Analyzer_="AFBAnalyzerSyst");
+  AFBSystPlotter(TString mode_="data ^mi+tau_mi+vv+wjets+tt+st+qcd+aa",TString Analyzer_="AFBAnalyzerSyst");
   using SKFlatPlotter::GetHist;
   virtual TH1* GetHist(const Sample& sample,Plot plot,TString additional_option="");
   virtual TH1* GetHistAFB(TH1* hist_forward,TH1* hist_backward);
