@@ -33,6 +33,8 @@ public:
   bool root=false;
   TPad* pad=NULL;
   vector<Hists> hists;
+  double chi2=-1.;
+  double ndf=0;
 
   Plot(vector<TString> words);
   Plot(TString line=""):Plot(SplitOptions(line)){};

@@ -97,7 +97,7 @@ public:
   virtual void DrawCompareAndDiff(Plot p);
   virtual void DrawCompareAndSig(Plot p);
   virtual void DrawDoubleRatio(Plot& plot);
-  virtual TCanvas* DrawPlot(Plot plotkey,TString additional_option="");
+  virtual TCanvas* DrawPlot(Plot& plot,TString additional_option="");
   virtual TCanvas* DrawPlot(TString plotkey,TString additional_option="");
   virtual TCanvas* DrawPlot(vector<TH1*> hists,TString additional_option="");
   vector<TCanvas*> DrawPlots(TRegexp plotkey,TString additional_option="");
@@ -157,6 +157,13 @@ Plotter::Plotter(){
   pdir=new TDirectory("plotdir","plotdir");
 }
 Plotter::~Plotter(){
+  for(auto [_,f]:files_cache){
+    if(f){
+      f->Close();
+      delete f;
+    }
+  }
+  files_cache.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2076,7 +2083,7 @@ void Plotter::DrawDoubleRatio(Plot& p){
     exit(1);
   }
 }
-TCanvas* Plotter::DrawPlot(Plot p,TString additional_option){
+TCanvas* Plotter::DrawPlot(Plot& p,TString additional_option){
   PInfo("[Plotter::DrawPlot] "+p.name+" "+p.histname+" "+p.option+" "+additional_option);_depth++;
   if(entries.size()==0){
     PError("[Plotter::DrawPlot] Please SetupEntries ");
@@ -2161,6 +2168,8 @@ TCanvas* Plotter::DrawPlot(Plot p,TString additional_option){
     if(p.option.Contains("pvalue")){
       latex.DrawLatex(gPad->GetLeftMargin()+0.01,1-gPad->GetTopMargin()-2.4*latex.GetTextSize(),Form("p = %g",TMath::Prob(chi2,ndf)));
     }
+    p.chi2=chi2;
+    p.ndf=ndf;
     if(p.option.Contains("chi2detail")){
       {
 	int ncov=3;
@@ -2335,7 +2344,8 @@ TCanvas* Plotter::DrawPlot(vector<TH1*> hists,TString additional_option){
   return c;
 }
 TCanvas* Plotter::DrawPlot(TString plotkey,TString additional_option){
-  return DrawPlot(MakePlot(plotkey,additional_option));
+  Plot p=MakePlot(plotkey,additional_option);
+  return DrawPlot(p);
 }
 vector<TCanvas*> Plotter::DrawPlots(TRegexp plotkey,TString additional_option){
   vector<TCanvas*> canvases;
@@ -2375,6 +2385,13 @@ void Plotter::SavePlot(TString plotkey,TString option,bool delete_canvas){
 	SaveCanvas(ctemp,path(0,path.Last('.'))+"_chi2impact"+path(path.Last('.'),path.Length()),false);
 	if(delete_canvas) delete ctemp;
       }
+    }
+  }
+  if(p.option.Contains("chi2")){
+    ofstream f(plotdir+"/"+defaultname+".chi");
+    if(f.is_open()){
+      f<<p.chi2<<" "<<p.ndf<<" "<<TMath::Prob(p.chi2,p.ndf)<<endl;
+      f.close();
     }
   }
   if(delete_canvas){
