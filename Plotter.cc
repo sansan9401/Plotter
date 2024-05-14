@@ -2568,12 +2568,12 @@ void Plotter::RebinXminXmax(TH1* hist,Plot p){
     if(hist->InheritsFrom("THStack")){
       for(const auto& obj:*((THStack*)hist)->GetHists())
 	RebinXminXmax((TH1*)obj,p);
-    // }else if(hist->InheritsFrom("TH4D")){
-    //   if(p.rebin!=""){
-    // 	PError((TString)"[Plotter::RebinXminXmax] Unsupported class for rebin "+hist->ClassName());
-    //   }
-    //   if(p.xmin!=0||p.xmax!=0)
-    // 	hist->GetXaxis()->SetRangeUser(p.xmin,p.xmax);
+    }else if(hist->InheritsFrom("TH4D")){
+      if(p.rebin!=""){
+    	PError((TString)"[Plotter::RebinXminXmax] Unsupported class for rebin "+hist->ClassName());
+      }
+      if(p.xmin!=0||p.xmax!=0)
+    	hist->GetXaxis()->SetRangeUser(p.xmin,p.xmax);
     }else if(hist->InheritsFrom("TH3")){
       if(p.rebin!=""){
 	PError((TString)"[Plotter::RebinXminXmax] Unsupported class for rebin "+hist->ClassName());
@@ -3014,7 +3014,7 @@ double Plotter::GetChi2(const TH1D* hist0,const TH1D* hist1,TMatrixD cov,int mas
 }
 TString Plotter::ParseForCondorRun(TString str) const {
   str.ReplaceAll("'","\\\'\\\\\\\'\\\'");
-  for(TString a:{"<",">","(",")","#","{","}"}) str.ReplaceAll(a,"\\"+a);
+  for(TString a:{"<",">","(",")","#","{","}","|"}) str.ReplaceAll(a,"\\"+a);
   return str;
 }
 

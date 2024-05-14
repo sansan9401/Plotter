@@ -188,10 +188,72 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("JES_data","JES (data)",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","data");
   AddSystematic("JES_sim","JES (sim.)",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","sim");
   AddSystematic("JER","JER",Systematic::Type::ENVELOPE,"_jet_smear_up _jet_smear_down","sim");
-  AddSystematic("JEC","JEC",Systematic::Type::MULTI,"JES_data JES_sim JER");
+  AddSystematic("JEC","JEC",Systematic::Type::MULTI,"JES_sim JER");
   
   int nreplica=20;
   AddSystematic("efficiencySF_stat","eff. stat.",Systematic::Type::GAUSSIAN,FormRange("_efficiencySF_stat%d",Range(nreplica)),"sim");
+  AddSystematic("efficiencySF_e_sys1","eff. e sys1",Systematic::Type::CORRELATED,"_electronRECOSF_s1m0 _electronIDSF_s1m0 _triggerSF_s1m0","sim");
+  AddSystematic("efficiencySF_e_sys2","eff. e sys2",Systematic::Type::CORRELATED,"_electronRECOSF_s2m0 _electronIDSF_s2m0 _triggerSF_s2m0","sim");
+  AddSystematic("efficiencySF_e_sys3","eff. e sys3",Systematic::Type::CORRELATED,"_electronRECOSF_s3m0 _electronIDSF_s3m0 _triggerSF_s3m0","sim");
+  AddSystematic("efficiencySF_e_sys4","eff. e sys4",Systematic::Type::CORRELATED,"_electronRECOSF_s4m0 _electronIDSF_s4m0 _triggerSF_s4m0","sim");
+  AddSystematic("efficiencySF_e_sys5","eff. e sys5",Systematic::Type::CORRELATED,"_electronRECOSF_s5m0 _electronIDSF_s5m0 _triggerSF_s5m0","sim");
+  AddSystematic("efficiencySF_e_sys6","eff. e sys6",Systematic::Type::CORRELATED,"_electronRECOSF_s6m0 _electronIDSF_s6m0 _triggerSF_s6m0","sim");
+  AddSystematic("efficiencySF_e_s7m0","eff. e s7m0",Systematic::Type::CORRELATED,"_electronRECOSF_s7m0 _electronIDSF_s7m0 _triggerSF_s7m0","sim");
+  AddSystematic("efficiencySF_e_s7m1","eff. e s7m1",Systematic::Type::CORRELATED,"_electronRECOSF_s7m1 _electronIDSF_s7m1 _triggerSF_s7m1","sim");
+  AddSystematic("efficiencySF_e_sys7","eff. e sys7",Systematic::Type::MULTI,"efficiencySF_e_s7m0 efficiencySF_e_s7m1");
+  AddSystematic("efficiencySF_e_s8m0","eff. e s8m0",Systematic::Type::CORRELATED,"_electronRECOSF_s8m0 _electronIDSF_s8m0 _triggerSF_s8m0","sim");
+  AddSystematic("efficiencySF_e_s8m1","eff. e s8m1",Systematic::Type::CORRELATED,"_electronRECOSF_s8m1 _electronIDSF_s8m1 _triggerSF_s8m1","sim");
+  AddSystematic("efficiencySF_e_sys8","eff. e sys8",Systematic::Type::MULTI,"efficiencySF_e_s8m0 efficiencySF_e_s8m1");
+  AddSystematic("efficiencySF_e_sys9","eff. e sys9",Systematic::Type::CORRELATED,"_electronRECOSF_s9m0 _electronIDSF_s9m0 _triggerSF_s9m0","sim");
+  AddSystematic("efficiencySF_e_sys10","eff. e sys10",Systematic::Type::CORRELATED,"_electronRECOSF_s10m0 _electronIDSF_s10m0 _triggerSF_s10m0","sim");
+  AddSystematic("efficiencySF_e_s11m0","eff. e s11m0",Systematic::Type::CORRELATED,"_electronRECOSF_s11m0 _electronIDSF_s11m0 _triggerSF_s11m0","sim");
+  AddSystematic("efficiencySF_e_s11m1","eff. e s11m1",Systematic::Type::CORRELATED,"_electronRECOSF_s11m1 _electronIDSF_s11m1 _triggerSF_s11m1","sim");
+  AddSystematic("efficiencySF_e_sys11","eff. e sys11",Systematic::Type::MULTI,"efficiencySF_e_s11m0 efficiencySF_e_s11m1");
+  AddSystematic("efficiencySF_e_s12m0","eff. e s12m0",Systematic::Type::CORRELATED,"_electronRECOSF_s12m0 _electronIDSF_s12m0 _triggerSF_s12m0","sim");
+  AddSystematic("efficiencySF_e_s12m1","eff. e s12m1",Systematic::Type::CORRELATED,"_electronRECOSF_s12m1 _electronIDSF_s12m1 _triggerSF_s12m1","sim");
+  AddSystematic("efficiencySF_e_sys12","eff. e sys12",Systematic::Type::MULTI,"efficiencySF_e_s12m0 efficiencySF_e_s12m1");
+  AddSystematic("efficiencySF_e_s13m0","eff. e s13m0",Systematic::Type::CORRELATED,"_electronRECOSF_s13m0 _electronIDSF_s13m0 _triggerSF_s13m0","sim");
+  AddSystematic("efficiencySF_e_s13m1","eff. e s13m1",Systematic::Type::CORRELATED,"_electronRECOSF_s13m1 _electronIDSF_s13m1 _triggerSF_s13m1","sim");
+  AddSystematic("efficiencySF_e_sys13","eff. e sys13",Systematic::Type::MULTI,"efficiencySF_e_s13m0 efficiencySF_e_s13m1");
+  AddSystematic("efficiencySF_e_sys14","eff. e sys14",Systematic::Type::CORRELATED,"_electronRECOSF_s14m0 _electronIDSF_s14m0 _triggerSF_s14m0","sim");
+  AddSystematic("efficiencySF_e_sys15","eff. e sys15",Systematic::Type::CORRELATED,"_electronRECOSF_s15m0 _electronIDSF_s15m0 _triggerSF_s15m0","sim");
+  AddSystematic("efficiencySF_e_sys16","eff. e sys16",Systematic::Type::CORRELATED,"_electronRECOSF_s16m0 _electronIDSF_s16m0 _triggerSF_s16m0","sim");
+  AddSystematic("efficiencySF_e_sys17","eff. e sys17",Systematic::Type::CORRELATED,"_electronRECOSF_s17m0 _electronIDSF_s17m0 _triggerSF_s17m0","sim");
+  AddSystematic("efficiencySF_e_residual","eff. e sys18",Systematic::Type::CORRELATED,"_electronIDSF_s18m0","sim"); //residual
+  AddSystematic("efficiencySF_e_noresidual","eff. e",Systematic::Type::MULTI,FormRange("efficiencySF_e_sys%d",Range(1,18)));
+  AddSystematic("efficiencySF_e","eff. e",Systematic::Type::MULTI,"efficiencySF_e_noresidual efficiencySF_e_residual");
+
+  AddSystematic("efficiencySF_m_sys1","eff. m sys1",Systematic::Type::CORRELATED,"_muonTrackingSF_s1m0 _muonRECOSF_s1m0 _muonIDSF_s1m0 _triggerSF_s1m0","sim");
+  AddSystematic("efficiencySF_m_sys2","eff. m sys2",Systematic::Type::CORRELATED,"_muonTrackingSF_s2m0 _muonRECOSF_s2m0 _muonIDSF_s2m0 _triggerSF_s2m0","sim");
+  AddSystematic("efficiencySF_m_sys3","eff. m sys3",Systematic::Type::CORRELATED,"_muonTrackingSF_s3m0 _muonRECOSF_s3m0 _muonIDSF_s3m0 _triggerSF_s3m0","sim");
+  AddSystematic("efficiencySF_m_sys4","eff. m sys4",Systematic::Type::CORRELATED,"_muonTrackingSF_s4m0 _muonRECOSF_s4m0 _muonIDSF_s4m0 _triggerSF_s4m0","sim");
+  AddSystematic("efficiencySF_m_sys5","eff. m sys5",Systematic::Type::CORRELATED,"_muonTrackingSF_s5m0 _muonRECOSF_s5m0 _muonIDSF_s5m0 _triggerSF_s5m0","sim");
+  AddSystematic("efficiencySF_m_sys6","eff. m sys6",Systematic::Type::CORRELATED,"_muonTrackingSF_s6m0 _muonRECOSF_s6m0 _muonIDSF_s6m0 _triggerSF_s6m0","sim");
+  AddSystematic("efficiencySF_m_s7m0","eff. m s7m0",Systematic::Type::CORRELATED,"_muonTrackingSF_s7m0 _muonRECOSF_s7m0 _muonIDSF_s7m0 _triggerSF_s7m0","sim");
+  AddSystematic("efficiencySF_m_s7m1","eff. m s7m1",Systematic::Type::CORRELATED,"_muonTrackingSF_s7m1 _muonRECOSF_s7m1 _muonIDSF_s7m1 _triggerSF_s7m1","sim");
+  AddSystematic("efficiencySF_m_sys7","eff. m sys7",Systematic::Type::MULTI,"efficiencySF_m_s7m0 efficiencySF_m_s7m1");
+  AddSystematic("efficiencySF_m_s8m0","eff. m s8m0",Systematic::Type::CORRELATED,"_muonTrackingSF_s8m0 _muonRECOSF_s8m0 _muonIDSF_s8m0 _triggerSF_s8m0","sim");
+  AddSystematic("efficiencySF_m_s8m1","eff. m s8m1",Systematic::Type::CORRELATED,"_muonTrackingSF_s8m1 _muonRECOSF_s8m1 _muonIDSF_s8m1 _triggerSF_s8m1","sim");
+  AddSystematic("efficiencySF_m_sys8","eff. m sys8",Systematic::Type::MULTI,"efficiencySF_m_s8m0 efficiencySF_m_s8m1");
+  AddSystematic("efficiencySF_m_sys9","eff. m sys9",Systematic::Type::CORRELATED,"_muonTrackingSF_s9m0 _muonRECOSF_s9m0 _muonIDSF_s9m0 _triggerSF_s9m0","sim");
+  AddSystematic("efficiencySF_m_sys10","eff. m sys10",Systematic::Type::CORRELATED,"_muonTrackingSF_s10m0 _muonRECOSF_s10m0 _muonIDSF_s10m0 _triggerSF_s10m0","sim");
+  AddSystematic("efficiencySF_m_s11m0","eff. m s11m0",Systematic::Type::CORRELATED,"_muonTrackingSF_s11m0 _muonRECOSF_s11m0 _muonIDSF_s11m0 _triggerSF_s11m0","sim");
+  AddSystematic("efficiencySF_m_s11m1","eff. m s11m1",Systematic::Type::CORRELATED,"_muonTrackingSF_s11m1 _muonRECOSF_s11m1 _muonIDSF_s11m1 _triggerSF_s11m1","sim");
+  AddSystematic("efficiencySF_m_sys11","eff. m sys11",Systematic::Type::MULTI,"efficiencySF_m_s11m0 efficiencySF_m_s11m1");
+  AddSystematic("efficiencySF_m_s12m0","eff. m s12m0",Systematic::Type::CORRELATED,"_muonTrackingSF_s12m0 _muonRECOSF_s12m0 _muonIDSF_s12m0 _triggerSF_s12m0","sim");
+  AddSystematic("efficiencySF_m_s12m1","eff. m s12m1",Systematic::Type::CORRELATED,"_muonTrackingSF_s12m1 _muonRECOSF_s12m1 _muonIDSF_s12m1 _triggerSF_s12m1","sim");
+  AddSystematic("efficiencySF_m_sys12","eff. m sys12",Systematic::Type::MULTI,"efficiencySF_m_s12m0 efficiencySF_m_s12m1");
+  AddSystematic("efficiencySF_m_s13m0","eff. m s13m0",Systematic::Type::CORRELATED,"_muonTrackingSF_s13m0 _muonRECOSF_s13m0 _muonIDSF_s13m0 _triggerSF_s13m0","sim");
+  AddSystematic("efficiencySF_m_s13m1","eff. m s13m1",Systematic::Type::CORRELATED,"_muonTrackingSF_s13m1 _muonRECOSF_s13m1 _muonIDSF_s13m1 _triggerSF_s13m1","sim");
+  AddSystematic("efficiencySF_m_sys13","eff. m sys13",Systematic::Type::MULTI,"efficiencySF_m_s13m0 efficiencySF_m_s13m1");
+  AddSystematic("efficiencySF_m_sys14","eff. m sys14",Systematic::Type::CORRELATED,"_muonTrackingSF_s14m0 _muonRECOSF_s14m0 _muonIDSF_s14m0 _triggerSF_s14m0","sim");
+  AddSystematic("efficiencySF_m_sys15","eff. m sys15",Systematic::Type::CORRELATED,"_muonTrackingSF_s15m0 _muonRECOSF_s15m0 _muonIDSF_s15m0 _triggerSF_s15m0","sim");
+  AddSystematic("efficiencySF_m_sys16","eff. m sys16",Systematic::Type::CORRELATED,"_muonTrackingSF_s16m0 _muonRECOSF_s16m0 _muonIDSF_s16m0 _triggerSF_s16m0","sim");
+  AddSystematic("efficiencySF_m_residual","eff. m sys17",Systematic::Type::CORRELATED,"_muonIDSF_s17m0","sim"); //residual
+  AddSystematic("efficiencySF_m_noresidual","eff. m (no residual)",Systematic::Type::MULTI,FormRange("efficiencySF_m_sys%d",Range(1,16)));
+  AddSystematic("efficiencySF_m","eff. m",Systematic::Type::MULTI,"efficiencySF_m_noresidual efficiencySF_m_residual");
+
+  // old
   AddSystematic("electronRECOSF_sys1","eff. e RECO sys1",Systematic::Type::ENVELOPE,"_electronRECOSF_s1m0","sim");
   AddSystematic("electronRECOSF_sys2","eff. e RECO sys2",Systematic::Type::ENVELOPE,"_electronRECOSF_s2m0","sim");
   AddSystematic("electronRECOSF_sys3","eff. e RECO sys3",Systematic::Type::ENVELOPE,"_electronRECOSF_s3m0","sim");
@@ -305,11 +367,16 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("noIDSF","noIDSF",Systematic::Type::ENVELOPE,"_noIDSF","sim");
   AddSystematic("noISOSF","noISOSF",Systematic::Type::ENVELOPE,"_noISOSF","sim");
   AddSystematic("notriggerSF","notriggerSF",Systematic::Type::ENVELOPE,"_notriggerSF","sim");
-
   AddSystematic("noefficiencySF","noefficiencySF",Systematic::Type::ENVELOPE,"_noefficiencySF","sim");
-  AddSystematic("efficiencySF_residual","eff. residual",Systematic::Type::MULTI,"electronIDSF_sys18 muonIDSF_sys17","sim");
-  AddSystematic("efficiencySF","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF efficiencySF_residual");
-  AddSystematic("efficiencySF_noresidual","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF");
+
+  // AddSystematic("efficiencySF_residual","eff. residual",Systematic::Type::MULTI,"electronIDSF_sys18 muonIDSF_sys17","sim");
+  // AddSystematic("efficiencySF","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF efficiencySF_residual");
+  // AddSystematic("efficiencySF_noresidual","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF");
+
+  AddSystematic("efficiencySF_residual","eff. residual",Systematic::Type::MULTI,"efficiencySF_e_residual efficiency_m_residual");
+  AddSystematic("efficiencySF","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat efficiencySF_e efficiencySF_m");
+  AddSystematic("efficiencySF_noresidual","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat efficiency_e_noresidual efficiency_m_noresidual");
+
   AddSystematic("effAN","systematic unc.",Systematic::Type::MULTI,"efficiencySF_noresidual z0weight");
   // AddSystematic("effAN2","systematic unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF z0weight prefireweight PUweight zptweight dyscale dypdf dyalphaS qcdss");
   // AddSystematic("effAN2pp","systematic unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF z0weight prefireweight_plus PUweight zptweight dyscale dypdf dyalphaS qcdss");
@@ -385,32 +452,33 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("dymuf","DY #mu_{F}",Systematic::Type::ENVELOPE,"_scalevariation1 _scalevariation2","dy");
   AddSystematic("dymur","DY #mu_{R}",Systematic::Type::ENVELOPE,"_scalevariation3 _scalevariation6","dy");
   AddSystematic("dymurmuf","DY #mu_{R}/#mu_{F}",Systematic::Type::MULTI,"dymur dymuf");
-  AddSystematic("dyalphaS","DY #alpha_{S}",Systematic::Type::ENVELOPE,"_alphaS_up _alphaS_down","dy");
+  AddSystematic("dypdf_hessian","DY PDF hessian",Systematic::Type::HESSIAN,FormRange("_pdf%d",Range(100)),"dy");
+  AddSystematic("dypdf_alphaS","DY PDF #alpha_{S}",Systematic::Type::ENVELOPE,"_alphaS_up _alphaS_down","dy");
+  AddSystematic("dypdf","DY PDF",Systematic::Type::MULTI,"dypdf_hessian dypdf_alphaS");
   AddSystematic("dyisr","DY ISR",Systematic::Type::ENVELOPE,"_ISR_up _ISR_down","dy");
   AddSystematic("dyfsr","DY FSR",Systematic::Type::ENVELOPE,"_FSR_up _FSR_down","dy");
   AddSystematic("dysthw2","DY sin^{2}#theta_{W}",Systematic::Type::ENVELOPE,"_sthw2_up _sthw2_down","dy");
   AddSystematic("dylargeptscales","DY largeptscales",Systematic::Type::ENVELOPE,"_largeptscales","dy");
   AddSystematic("dyq0","DY q0",Systematic::Type::ENVELOPE,"_q0_up _q0_down","dy");
-  AddSystematic("dypdf","DY PDF",Systematic::Type::HESSIAN,FormRange("_pdf%d",Range(100)),"dy");
   AddSystematic("nozptweight","no DY Z p_{T} reweight",Systematic::Type::ENVELOPE,"_nozptweight","dy");
   AddSystematic("zptweight_g","DY Z p_{T} reweight (G)",Systematic::Type::ENVELOPE,"_zptweight_g","dy");
   AddSystematic("zptweight_gy","DY Z p_{T} reweight (GY)",Systematic::Type::ENVELOPE,"_zptweight_gy","dy");
   AddSystematic("zptweight_gym","DY Z p_{T} reweight (GYM)",Systematic::Type::ENVELOPE,"_zptweight_gym","dy");
-  AddSystematic("zptweight","DY Z p_{T} reweight",Systematic::Type::MULTI,"nozptweight zptweight_g zptweight_gy zptweight_gym","dy");
-  //AddSystematic("zptweight","DY Z p_{T} reweight",Systematic::Type::MULTI,"nozptweight","dy");
+  AddSystematic("zptweight","DY Z p_{T} reweight",Systematic::Type::MULTI,"nozptweight zptweight_gy zptweight_gym","dy");
   AddSystematic("noweakweight","DY Weak correction",Systematic::Type::ENVELOPE,"_noweakweight","dy");
-  AddSystematic("dytheory","theory (DY)",Systematic::Type::MULTI,"dyalphaS dymuf dymur dypdf zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0");
-  AddSystematic("dytheory_nopdf","DY theory",Systematic::Type::MULTI,"dyalphaS dymuf dymur zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0");
+  AddSystematic("dytheory","theory (DY)",Systematic::Type::MULTI,"dyscale dypdf zptweight noweakweight dyisr dyfsr dysthw2");
+  //AddSystematic("dytheory_nopdf","DY theory",Systematic::Type::MULTI,"dyalphaS dymuf dymur zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0");
 
   AddSystematic("ttscale","t#bar{t} #mu_{R}/#mu_{F}",Systematic::Type::ENVELOPE,"_scalevariation0 _scalevariation1 _scalevariation2 _scalevariation3 _scalevariation4 _scalevariation6 _scalevariation8","ttll");
   AddSystematic("ttmuf","t#bar{t} #mu_{F}",Systematic::Type::ENVELOPE,"_scalevariation1 _scalevariation2","ttll");
   AddSystematic("ttmur","t#bar{t} #mu_{R}",Systematic::Type::ENVELOPE,"_scalevariation3 _scalevariation6","ttll");
   AddSystematic("ttisr","t#bar{t} ISR",Systematic::Type::ENVELOPE,"_ISR_up _ISR_down","ttll");
   AddSystematic("ttfsr","t#bar{t} FSR",Systematic::Type::ENVELOPE,"_FSR_up _FSR_down","ttll");
-  AddSystematic("ttpdf","t#bar{t} PDF",Systematic::Type::HESSIAN,FormRange("_pdf%d",Range(100)),"ttll");
-  AddSystematic("ttalphaS","t#bar{t} alphaS",Systematic::Type::ENVELOPE,"_alphaS_up _alphaS_down","ttll");
+  AddSystematic("ttpdf_hessian","t#bar{t} PDF hessian",Systematic::Type::HESSIAN,FormRange("_pdf%d",Range(100)),"ttll");
+  AddSystematic("ttpdf_alphaS","t#bar{t} PDF #alpha_{S}",Systematic::Type::ENVELOPE,"_alphaS_up _alphaS_down","ttll");
+  AddSystematic("ttpdf","t#bar{t} PDF",Systematic::Type::MULTI,"ttpdf_hessian ttpdf_alphaS");
   AddSystematic("notopptweight","notopptweight",Systematic::Type::ENVELOPE,"_notopptweight","tt");
-  AddSystematic("tttheory","theory (t#bar{t})",Systematic::Type::MULTI,"ttmuf ttmur ttisr ttfsr ttpdf ttalphaS notopptweight");
+  AddSystematic("tttheory","theory (t#bar{t})",Systematic::Type::MULTI,"ttscale ttisr ttfsr ttpdf notopptweight");
 
   AddSystematic("dytauxsec","DY tau xsec",Systematic::Type::ENVELOPE,"scale:1.02","dytau");
   AddSystematic("vvxsec","VV xsec",Systematic::Type::ENVELOPE,"scale:1.065","vv"); //fixme: should split vv samples
@@ -430,8 +498,8 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("lumi","lumi.",Systematic::Type::MULTI,"lumi2016 lumi2017 lumi2018 lumi678 lumi78");
 
 
-  AddSystematic("sys","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF qcd JEC lumi xsec roccor");
-  AddSystematic("totalsys","syst. unc.",Systematic::Type::MULTI,"sys dytheory tttheory");
+  AddSystematic("exp","exp. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF qcd JEC lumi xsec roccor");
+  AddSystematic("totalsys","syst. unc.",Systematic::Type::MULTI,"exp dytheory tttheory");
 
   AddSystematic("totalsys_detail","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec roccor_noresidual roccor_residual dyalphaS dymuf dymur dypdf zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0 tttheory");
 
