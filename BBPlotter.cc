@@ -3,7 +3,7 @@
 #define __BBPlotter_CC__
 class BBPlotter:public SKFlatPlotter{
 public:
-  BBPlotter(TString mode_="data ^tt+unmatched_tt+mi+tau_mi+vv+wjets+st+qcdss+aa",TString Analyzer_="BBAnalyzer");
+  BBPlotter(TString mode_="data ^tt+unmatched_tt+mi+tau_mi+vv+wjets+st+qcdb+aa",TString Analyzer_="BBAnalyzer");
   using SKFlatPlotter::GetHist;
   virtual TH1* GetHist(const Sample& sample,Plot plot,TString additional_option="");
   virtual void SetupEntries(TString mode_);
@@ -15,7 +15,11 @@ public:
 BBPlotter::BBPlotter(TString mode_,TString Analyzer_){Setup(mode_,Analyzer_);}
 void BBPlotter::SetupEntries(TString mode_){
   if(mode_=="eff"){
-    Plotter::SetupEntries("data-unmatched_tt-mi-tau_mi-vv-wjets-st-qcdss-aa tt");
+    //Plotter::SetupEntries("data-unmatched_tt-mi-tau_mi-vv-wjets-st-qcdss-aa tt");
+    //Plotter::SetupEntries("data-unmatched_tt-mi-tau_mi-vv-wjets-st-aa tt");
+    Plotter::SetupEntries("data-unmatched_tt-mi-tau_mi-vv-wjets-st-qcdb-aa tt");
+    //Plotter::SetupEntries("data tt+unmatched_tt+mi+tau_mi+vv+wjets+st+qcdb+aa");
+    //Plotter::SetupEntries("data-unmatched_tt-tau_mi-wjets-aa tt+mi+st+vv+qcdb");
   }else if(mode_=="charge"){
     Plotter::SetupEntries("ttll ttll");
     entries[0].title="b";
@@ -85,6 +89,7 @@ void BBPlotter::SetupSamples(){
   SKFlatPlotter::SetupSamples();
   samples["tt"]=Sample("t#bar{t}","SUM",kMagenta+1)+"ttll"+"ttlj";
   samples["unmatched_tt"]="unmatched_"%(Sample("t#bar{t} (unmatched)","SUM",kMagenta-4)+"ttll"+"ttlj")+"ttjj";
+  samples["qcdb"]=Sample("QCD multi-jet","SAMPLE sim",kCyan)+TRegexp(Analyzer+SkimTree+"_.*QCD_bEnriched_HT.*");
 }
 void BBPlotter::SetupSystematics(){
   SKFlatPlotter::SetupSystematics();

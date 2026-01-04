@@ -130,6 +130,7 @@ public:
   static TLegend* DrawLegend(const Plot& p);
   static TLegend* DrawLegendSys(const Plot& p);
   static void DrawPreliminary(TPad* c=NULL,TString era="",TString lumi="",TString option="");
+  static void DrawCMS(TPad* c=NULL,TString era="",TString lumi="",TString option="");
   static void DrawTexts(const Plot& p);
   
   //Plot
@@ -209,7 +210,7 @@ void Plotter::SetupStyle(){
   gStyle->SetPadBottomMargin(0.12);
   gStyle->SetPadColor(0);
   gStyle->SetFrameFillStyle(0);
-  TGaxis::SetExponentOffset(-0.06,0.02);
+  TGaxis::SetExponentOffset(-0.07,0.02);
 }
 TString Plotter::GetSetupStringForCondor(){
   return "Setup\\(\\\\\\\""+mode+"\\\\\\\",\\\\\\\""+scandir+"\\\\\\\"\\)";
@@ -366,7 +367,25 @@ TH1* Plotter::GetHist(int ientry,TString plotkey,TString additional_option){
 } 
 TH1* Plotter::GetHist(const Sample& sample,Plot p,TString additional_option){
   PInfo("[Plotter::GetHist] "+sample.title+" "+p.histname+" "+p.option+" "+additional_option);_depth++;
-  TH1* hist=GetHistFromSample(sample,p,additional_option);
+  p.SetOption(additional_option);
+  TH1* hist=NULL;
+  if(p.option.Contains("eff:")){
+    TString opt=p.option(TRegexp("eff:[^ ]*"));
+    TString histname_den=opt(4,opt.Length());
+    TH1* hist_num=GetTH1(GetHist(sample,p-"eff"),true);
+    TH1* hist_den=GetTH1(GetHist(sample,p-"eff","histname:"+histname_den),true);
+    if(hist_num&&hist_den){
+      hist=(TH1*)hist_num->Clone();
+      hist->Divide(hist_num,hist_den,1,1,"B");
+      if(hist_num) delete hist_num;
+      if(hist_den) delete hist_den;
+      sample.ApplyStyle(hist);
+      hist->SetTitle(p.title);
+      hist->SetDirectory(pdir);
+      return hist;
+    }
+  }
+  hist=GetHistFromSample(sample,p);
   if(hist){
     hist->SetTitle(p.title);
     RebinXminXmax(hist,p);
@@ -430,7 +449,7 @@ TH1* Plotter::GetHistFromSample(const Sample& sample,const Plot& pp,TString addi
       if(hist) hist->Scale(sample.weight);
     }
   }else if(p.option.Contains("absx")){
-    Plot temp_plot=p-"absx";
+    Plot temp_plot=p-"absx"-"scale";
     TH1* temp_hist=GetHistFromSample(sample,temp_plot);
     if(temp_hist){
       int nbin=temp_hist->GetNbinsX();
@@ -455,7 +474,7 @@ TH1* Plotter::GetHistFromSample(const Sample& sample,const Plot& pp,TString addi
       }
     }
   }else if(p.option.Contains("xsquare")){
-    Plot temp_plot=p-"xsquare";
+    Plot temp_plot=p-"xsquare"-"scale";
     hist=GetHistFromSample(sample,temp_plot);
     if(hist){
       vector<double> bins;
@@ -1806,7 +1825,7 @@ void Plotter::DrawSig(Plot p){
 
   TH1* axisparent=GetAxisParent();
   if(axisparent){
-    if(p.ytitle=="") axisparent->GetYaxis()->SetTitle("Difference (#sigma)");
+    if(p.ytitle=="") axisparent->GetYaxis()->SetTitle("Difference [#sigma]");
     axisparent->GetYaxis()->UnZoom();
     if(p.ymin||p.ymax){
       axisparent->GetYaxis()->SetRangeUser(p.ymin,p.ymax);
@@ -2109,7 +2128,7 @@ TCanvas* Plotter::DrawPlot(Plot& p,TString additional_option){
   else if(p.type==Plot::Type::CompareAndDiff) DrawCompareAndDiff(p);
   else if(p.type==Plot::Type::CompareAndSig) DrawCompareAndSig(p);
   else if(p.type==Plot::Type::DoubleRatio) DrawDoubleRatio(p);
-  if(p.option.Contains("preliminary")){
+  if(p.option.Contains("cms")){
     TString era;
     if(p.era!="") era=p.era;
     else if(p.histname.Contains("2016a/")) era="2016preVFP";
@@ -2118,7 +2137,7 @@ TCanvas* Plotter::DrawPlot(Plot& p,TString additional_option){
     else if(p.histname.Contains("2017/")) era="2017";
     else if(p.histname.Contains("2018/")) era="2018";
     else if(p.histname.Contains("201[6-8]/")||p.histname.Contains("201[678ab]+/")||p.histname.Contains("201[6-8][ab]?/")||p.histname.Contains("201[678][ab]?/")) era="Run2";
-    DrawPreliminary(c,era,p.lumi,p.option);
+    DrawCMS(c,era,p.lumi,p.option);
     if(p.blind_xmin||p.blind_xmax){
       TLatex latex;
       latex.SetTextSize(0.035);
@@ -2164,7 +2183,7 @@ TCanvas* Plotter::DrawPlot(Plot& p,TString additional_option){
     latex.SetNDC();
     int ndf=ilast-ifirst+1;
     if(p.option.Contains("norm")) ndf--;
-    latex.DrawLatex(gPad->GetLeftMargin()+0.01,1-gPad->GetTopMargin()-1.1*latex.GetTextSize(),Form("#chi^{2}/n_{dof} = %g / %d",chi2,ndf));
+    latex.DrawLatex(gPad->GetLeftMargin()+0.01,1-gPad->GetTopMargin()-1.1*latex.GetTextSize(),Form("#chi^{2}/n_{dof} = %.1f / %d",chi2,ndf));
     if(p.option.Contains("pvalue")){
       latex.DrawLatex(gPad->GetLeftMargin()+0.01,1-gPad->GetTopMargin()-2.4*latex.GetTextSize(),Form("p = %g",TMath::Prob(chi2,ndf)));
     }
@@ -2278,7 +2297,7 @@ TCanvas* Plotter::DrawPlot(vector<TH1*> hists,TString additional_option){
   else if(p.type==Plot::Type::CompareAndDiff) DrawCompareAndDiff(p);
   else if(p.type==Plot::Type::CompareAndSig) DrawCompareAndSig(p);
   else if(p.type==Plot::Type::DoubleRatio) DrawDoubleRatio(p);
-  if(p.option.Contains("preliminary")){
+  if(p.option.Contains("cms")){
     TString era;
     if(p.era!="") era=p.era;
     else if(p.histname.Contains("2016a/")) era="2016preVFP";
@@ -2287,7 +2306,7 @@ TCanvas* Plotter::DrawPlot(vector<TH1*> hists,TString additional_option){
     else if(p.histname.Contains("2017/")) era="2017";
     else if(p.histname.Contains("2018/")) era="2018";
     else if(p.histname.Contains("201[6-8]/")||p.histname.Contains("201[678ab]+/")||p.histname.Contains("201[6-8][ab]?/")||p.histname.Contains("201[678][ab]?/")) era="Run2";
-    DrawPreliminary(c,era,p.lumi,p.option);
+    DrawCMS(c,era,p.lumi,p.option);
     if(p.blind_xmin||p.blind_xmax){
       TLatex latex;
       latex.SetTextSize(0.035);
@@ -2364,11 +2383,12 @@ void Plotter::SavePlot(TString plotkey,TString option,bool delete_canvas){
   defaultname.ReplaceAll("]","_");
   for(auto save:saves){
     TString path=save;
-    if(save==""||save.Contains(TRegexp("^\\.?pdf$"))||save.Contains(TRegexp("^\\.?png$"))){
+    if(save==""||save.Contains(TRegexp("^\\.?pdf$"))||save.Contains(TRegexp("^\\.?png$"))||save.Contains(TRegexp("^\\.?root$"))){
       path=defaultname;
     }
     if(save.Contains(TRegexp("^\\.?pdf$"))) path+=".pdf";
     else if(save.Contains(TRegexp("^\\.?png$"))) path+=".png";
+    else if(save.Contains(TRegexp("^\\.?root$"))) path+=".root";
     if(!Basename(path).Contains(".")){
       path+=".png";
     }
@@ -2780,7 +2800,9 @@ TLegend* Plotter::DrawLegendSys(const Plot& p){
   }
   double height=maxheight/pad->GetHNDC();
 
-  TLegend* legend=new TLegend(pad->GetLeftMargin()+0.01,1-pad->GetTopMargin()-0.01,1-pad->GetRightMargin()-0.01,1-pad->GetTopMargin()-0.01-height);
+  TLegend* legend=NULL;
+  if(p.option.Contains("syslegB")) legend=new TLegend(pad->GetLeftMargin()+0.01,pad->GetBottomMargin()+0.01,1-pad->GetRightMargin()-0.01,pad->GetBottomMargin()+0.01+height);
+  else legend=new TLegend(pad->GetLeftMargin()+0.01,1-pad->GetTopMargin()-0.01,1-pad->GetRightMargin()-0.01,1-pad->GetTopMargin()-0.01-height);
   legend->SetNColumns(hists.size());
   for(const auto& [title,hist]:hists) legend->AddEntry(hist,title);
   legend->SetBorderSize(0);
@@ -2789,6 +2811,9 @@ TLegend* Plotter::DrawLegendSys(const Plot& p){
   return legend;
 }
 void Plotter::DrawPreliminary(TPad *c,TString era,TString lumi,TString option){
+  DrawCMS(c,era,lumi,option);
+}
+void Plotter::DrawCMS(TPad *c,TString era,TString lumi,TString option){
   if(!c) return;
   c->cd(1);
   TH1* axisparent=GetAxisParent();
@@ -2803,7 +2828,15 @@ void Plotter::DrawPreliminary(TPad *c,TString era,TString lumi,TString option){
   double leftmargin=c->GetLeftMargin();
   double rightmargin=c->GetRightMargin();
   double topmargin=c->GetTopMargin();
-  latex.DrawLatex(0.01+leftmargin,1.01-topmargin,"CMS #bf{#it{Preliminary}}");
+  if(option.Contains("cmspreliminary"))
+    latex.DrawLatex(0.00+leftmargin,1.01-topmargin,"#scale[1.3]{CMS} #bf{#it{Preliminary}}");
+  else if(option.Contains("cmssimwip"))
+    latex.DrawLatex(0.00+leftmargin,1.01-topmargin,"#scale[1.3]{CMS} #bf{#it{Simulation Work in progress}}");
+  else if(option.Contains("cmswip"))
+    latex.DrawLatex(0.00+leftmargin,1.01-topmargin,"#scale[1.3]{CMS} #bf{#it{Work in progress}}");
+  else
+    latex.DrawLatex(0.00+leftmargin,1.01-topmargin,"#bf{#it{Private work (CMS data/simulation)}}");
+
   if(!option.Contains("nolumi")){
     latex.SetTextAlign(31);
     if(lumi!=""){
@@ -2840,9 +2873,9 @@ void Plotter::DrawPreliminary(TPad *c,TString era,TString lumi,TString option){
       latex.DrawLatex(1-rightmargin,y,"Run II");
     }
   }
-  latex.SetTextColor(2);
-  latex.SetTextAlign(21);
-  latex.DrawLatex(0.5*(leftmargin-rightmargin)+0.5,1.01-topmargin,"#it{Working in progress}");
+  //latex.SetTextColor(2);
+  //latex.SetTextAlign(21);
+  //latex.DrawLatex(0.5*(leftmargin-rightmargin)+0.5,1.01-topmargin,"#it{Working in progress}");
   c->Update();
   return;
 }

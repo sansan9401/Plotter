@@ -31,14 +31,19 @@ void SKFlatPlotter::SetupSamples(){
   for(TString era:{"2016preVFP","2016postVFP","2017","2018"}){
     samples["muon"+era]=Sample("data (#mu#mu)","SAMPLE data "+era,kBlack,20)+TRegexp(era+"/DATA/"+Analyzer+SkimTree+"_DoubleMuon_[A-Z]")+TRegexp(era+"/DATA/"+Analyzer+SkimTree+"_SingleMuon_[A-Z]");
     samples["electron"+era]=Sample("data (ee)","SAMPLE data "+era,kBlack,20)+TRegexp(era+"/DATA/"+Analyzer+SkimTree+"_.*EG.*_[A-Z]")+TRegexp(era+"/DATA/"+Analyzer+SkimTree+"_SingleElectron_[A-Z]");
-    samples["vv"+era]=Sample("Diboson","SAMPLE sim vv "+era,kBlue)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_[W-Z][W-Z]_pythia$");
+    samples["ww"+era]=Sample("WW","SAMPLE sim ww "+era,kBlue)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_WW_pythia$");
+    samples["wz"+era]=Sample("WZ","SAMPLE sim wz "+era,kBlue)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_WZ_pythia$");
+    samples["zz"+era]=Sample("ZZ","SAMPLE sim zz "+era,kBlue)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_ZZ_pythia$");
+    samples["vv"+era]=Sample("Diboson","SUM",kBlue)+("ww"+era)+("wz"+era)+("zz"+era);
     samples["wjets"+era]=Sample("W","SAMPLE sim wjets "+era,kYellow)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_WJets_MG$");
     samples["ttll"+era]=Sample("t#bar{t}#rightarrowll","SAMPLE sim tt ttll "+era,kMagenta+1)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_TTLL_powheg$");
-    samples["ttlj"+era]=Sample("t#bar{t}#rightarrowlj","SAMPLE sim tt "+era,kMagenta+2)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_TTLJ_powheg$");
-    samples["ttjj"+era]=Sample("t#bar{t}#rightarrowjj","SAMPLE sim tt "+era,kMagenta+3)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_TTJJ_powheg$");
-    samples["tw"+era]=Sample("tW","SAMPLE sim "+era,kMagenta+10)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_SingleTop_tW_.*top_NoFullyHad$");
-    samples["st"+era]=Sample("Single top","SAMPLE sim "+era,kMagenta+10)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_SingleTop_.*$");
-    samples["aa"+era]=Sample("#gamma#gamma#rightarrowll","SAMPLE sim "+era,kYellow+1)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_GGToLL$");
+    samples["ttlj"+era]=Sample("t#bar{t}#rightarrowlj","SAMPLE sim tt ttlj "+era,kMagenta+2)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_TTLJ_powheg$");
+    samples["ttjj"+era]=Sample("t#bar{t}#rightarrowjj","SAMPLE sim tt ttjj "+era,kMagenta+3)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_TTJJ_powheg$");
+    samples["tw"+era]=Sample("tW","SAMPLE sim tw "+era,kMagenta+10)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_SingleTop_tW_.*top_NoFullyHad$");
+    samples["stt"+era]=Sample("Single top tch","SAMPLE sim stt "+era,kMagenta+11)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_SingleTop_tch_.*$");
+    samples["sts"+era]=Sample("Single top sch","SAMPLE sim sts "+era,kMagenta+12)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_SingleTop_sch_.*$");
+    samples["st"+era]=Sample("Single top","SUM",kMagenta+10)+("tw"+era)+("stt"+era)+("sts"+era);
+    samples["aa"+era]=Sample("#gamma#gamma#rightarrowll","SAMPLE sim aa "+era,kYellow+1)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_GGToLL$");
 
     samples["amc"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_DYJets$");
     samples["mi"+era]=Sample("#gamma*/Z#rightarrowll","SAMPLE sim dy "+era,kRed)+TRegexp(era+"/.*"+Analyzer+SkimTree+"_DYJetsTo.*MiNNLO$");
@@ -165,7 +170,11 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("prefireweight_sys6","prefiring new6",Systematic::Type::ENVELOPE,"_newprefireweight6","sim");
   AddSystematic("prefireweight_plus","prefiring unc.",Systematic::Type::MULTI,"prefireweight prefireweight_sys3 prefireweight_sys4 prefireweight_sys5 "); //prefireweight_sys6
   AddSystematic("z0weight","no z_{vtx} reweight",Systematic::Type::ENVELOPE,"_z0weight _noz0weight","sim");
-  AddSystematic("CFSF","charge-flip",Systematic::Type::ENVELOPE,"_CFSF_up _CFSF_down","sim");
+  AddSystematic("CFSF2016a","charge-flip",Systematic::Type::ENVELOPE,"_CFSF_up _CFSF_down","sim&&2016preVFP");
+  AddSystematic("CFSF2016b","charge-flip",Systematic::Type::ENVELOPE,"_CFSF_up _CFSF_down","sim&&2016postVFP");
+  AddSystematic("CFSF2017","charge-flip",Systematic::Type::ENVELOPE,"_CFSF_up _CFSF_down","sim&&2017");
+  AddSystematic("CFSF2018","charge-flip",Systematic::Type::ENVELOPE,"_CFSF_up _CFSF_down","sim&&2018");
+  AddSystematic("CFSF","charge-flip",Systematic::Type::MULTI,"CFSF2016a CFSF2016b CFSF2017 CFSF2018");
 
   AddSystematic("btaghcorr","b tagging (heavy, era-correlated)",Systematic::Type::ENVELOPE,"_btagSF_hcorr","sim");
   AddSystematic("btaghuncorr2016a","b tagging (heavy, era-uncorrelated)",Systematic::Type::ENVELOPE,"_btagSF_huncorr","sim&&2016preVFP");
@@ -187,8 +196,17 @@ void SKFlatPlotter::SetupSystematics(){
 
   AddSystematic("JES_data","JES (data)",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","data");
   AddSystematic("JES_sim","JES (sim.)",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","sim");
-  AddSystematic("JER","JER",Systematic::Type::ENVELOPE,"_jet_smear_up _jet_smear_down","sim");
-  AddSystematic("JEC","JEC",Systematic::Type::MULTI,"JES_sim JER");
+  AddSystematic("JES2016a","JES 2016a",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","sim&&2016preVFP");
+  AddSystematic("JES2016b","JES 2016b",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","sim&&2016postVFP");
+  AddSystematic("JES2017","JES 2017",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","sim&&2017");
+  AddSystematic("JES2018","JES 2018",Systematic::Type::ENVELOPE,"_jet_scale_up _jet_scale_down","sim&&2018");
+  AddSystematic("JER2016a","JER 2016a",Systematic::Type::ENVELOPE,"_jet_smear_up _jet_smear_down","sim&&2016preVFP");
+  AddSystematic("JER2016b","JER 2016b",Systematic::Type::ENVELOPE,"_jet_smear_up _jet_smear_down","sim&&2016postVFP");
+  AddSystematic("JER2017","JER 2017",Systematic::Type::ENVELOPE,"_jet_smear_up _jet_smear_down","sim&&2017");
+  AddSystematic("JER2018","JER 2018",Systematic::Type::ENVELOPE,"_jet_smear_up _jet_smear_down","sim&&2018");
+  AddSystematic("JES","JES",Systematic::Type::MULTI,"JES2016a JES2016b JES2017 JES2018");
+  AddSystematic("JER","JER",Systematic::Type::MULTI,"JER2016a JER2016b JER2017 JER2018");
+  AddSystematic("JEC","JEC",Systematic::Type::MULTI,"JES JER");
   
   int nreplica=20;
   AddSystematic("efficiencySF_stat","eff. stat.",Systematic::Type::GAUSSIAN,FormRange("_efficiencySF_stat%d",Range(nreplica)),"sim");
@@ -373,9 +391,9 @@ void SKFlatPlotter::SetupSystematics(){
   // AddSystematic("efficiencySF","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF efficiencySF_residual");
   // AddSystematic("efficiencySF_noresidual","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF");
 
-  AddSystematic("efficiencySF_residual","eff. residual",Systematic::Type::MULTI,"efficiencySF_e_residual efficiency_m_residual");
+  AddSystematic("efficiencySF_residual","eff. residual",Systematic::Type::MULTI,"efficiencySF_e_residual efficiencySF_m_residual");
   AddSystematic("efficiencySF","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat efficiencySF_e efficiencySF_m");
-  AddSystematic("efficiencySF_noresidual","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat efficiency_e_noresidual efficiency_m_noresidual");
+  AddSystematic("efficiencySF_noresidual","eff. unc.",Systematic::Type::MULTI,"efficiencySF_stat efficiencySF_e_noresidual efficiencySF_m_noresidual");
 
   AddSystematic("effAN","systematic unc.",Systematic::Type::MULTI,"efficiencySF_noresidual z0weight");
   // AddSystematic("effAN2","systematic unc.",Systematic::Type::MULTI,"efficiencySF_stat electronRECOSF electronIDSF muonTrackingSF muonRECOSF muonIDSF triggerSF z0weight prefireweight PUweight zptweight dyscale dypdf dyalphaS qcdss");
@@ -466,12 +484,13 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("zptweight_gym","DY Z p_{T} reweight (GYM)",Systematic::Type::ENVELOPE,"_zptweight_gym","dy");
   AddSystematic("zptweight","DY Z p_{T} reweight",Systematic::Type::MULTI,"nozptweight zptweight_gy zptweight_gym","dy");
   AddSystematic("noweakweight","DY Weak correction",Systematic::Type::ENVELOPE,"_noweakweight","dy");
-  AddSystematic("dytheory","theory (DY)",Systematic::Type::MULTI,"dyscale dypdf zptweight noweakweight dyisr dyfsr dysthw2");
+  AddSystematic("dytheory","theory (DY)",Systematic::Type::MULTI,"dyscale dypdf zptweight noweakweight dyisr dyfsr");
   //AddSystematic("dytheory_nopdf","DY theory",Systematic::Type::MULTI,"dyalphaS dymuf dymur zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0");
 
   AddSystematic("ttscale","t#bar{t} #mu_{R}/#mu_{F}",Systematic::Type::ENVELOPE,"_scalevariation0 _scalevariation1 _scalevariation2 _scalevariation3 _scalevariation4 _scalevariation6 _scalevariation8","ttll");
   AddSystematic("ttmuf","t#bar{t} #mu_{F}",Systematic::Type::ENVELOPE,"_scalevariation1 _scalevariation2","ttll");
   AddSystematic("ttmur","t#bar{t} #mu_{R}",Systematic::Type::ENVELOPE,"_scalevariation3 _scalevariation6","ttll");
+  AddSystematic("ttmurmuf","t#bar{t} #mu_{R}/#mu_{F}",Systematic::Type::MULTI,"ttmur ttmuf");
   AddSystematic("ttisr","t#bar{t} ISR",Systematic::Type::ENVELOPE,"_ISR_up _ISR_down","ttll");
   AddSystematic("ttfsr","t#bar{t} FSR",Systematic::Type::ENVELOPE,"_FSR_up _FSR_down","ttll");
   AddSystematic("ttpdf_hessian","t#bar{t} PDF hessian",Systematic::Type::HESSIAN,FormRange("_pdf%d",Range(100)),"ttll");
@@ -480,14 +499,19 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("notopptweight","notopptweight",Systematic::Type::ENVELOPE,"_notopptweight","tt");
   AddSystematic("tttheory","theory (t#bar{t})",Systematic::Type::MULTI,"ttscale ttisr ttfsr ttpdf notopptweight");
 
-  AddSystematic("dytauxsec","DY tau xsec",Systematic::Type::ENVELOPE,"scale:1.02","dytau");
+  AddSystematic("dytauxsec","DY tau xsec",Systematic::Type::ENVELOPE,"scale:1.018","dytau");
+  AddSystematic("wjetsxsec","W xsec",Systematic::Type::ENVELOPE,"scale:1.038","wjets");
   AddSystematic("vvxsec","VV xsec",Systematic::Type::ENVELOPE,"scale:1.065","vv"); //fixme: should split vv samples
   AddSystematic("wwxsec","WW xsec",Systematic::Type::ENVELOPE,"scale:1.025","ww");
-  AddSystematic("wzxsec","WZ xsec",Systematic::Type::ENVELOPE,"scale:1.065","wz");
-  AddSystematic("zzxsec","ZZ xsec",Systematic::Type::ENVELOPE,"scale:1.056","zz");
-  AddSystematic("wjetsxsec","W xsec",Systematic::Type::ENVELOPE,"scale:1.038","wjets");
-  AddSystematic("ttxsec","tt xsec",Systematic::Type::ENVELOPE,"scale:1.052","tt");
-  AddSystematic("xsec","xsec",Systematic::Type::MULTI,"dytauxsec vvxsec wjetsxsec ttxsec");
+  AddSystematic("wzxsec","WZ xsec",Systematic::Type::ENVELOPE,"scale:1.061","wz");
+  AddSystematic("zzxsec","ZZ xsec",Systematic::Type::ENVELOPE,"scale:1.049","zz");
+  AddSystematic("ttljxsec","ttlj xsec",Systematic::Type::ENVELOPE,"scale:1.061","ttlj");
+  AddSystematic("stxsec","st xsec",Systematic::Type::ENVELOPE,"scale:1.054","st");
+  AddSystematic("twxsec","tw xsec",Systematic::Type::ENVELOPE,"scale:1.054","tw");
+  AddSystematic("sttxsec","stt xsec",Systematic::Type::ENVELOPE,"scale:1.042","stt");
+  AddSystematic("stsxsec","sts xsec",Systematic::Type::ENVELOPE,"scale:1.039","sts");
+  AddSystematic("aaxsec","aa xsec",Systematic::Type::ENVELOPE,"scale:1.3","aa");
+  AddSystematic("xsec","xsec",Systematic::Type::MULTI,"dytauxsec wjetsxsec wwxsec wzxsec zzxsec ttljxsec twxsec sttxsec stsxsec aaxsec");
 
   // https://twiki.cern.ch/twiki/bin/viewauth/CMS/LumiRecommendationsRun2
   AddSystematic("lumi2016","lumi2016",Systematic::Type::ENVELOPE,"scale:1.01","sim&&(2016preVFP||2016postVFP)");
@@ -500,8 +524,10 @@ void SKFlatPlotter::SetupSystematics(){
 
   AddSystematic("exp","exp. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF qcd JEC lumi xsec roccor");
   AddSystematic("totalsys","syst. unc.",Systematic::Type::MULTI,"exp dytheory tttheory");
+  AddSystematic("totalsys_more","syst. unc.",Systematic::Type::MULTI,"totalsys JES_data dymurmuf ttmurmuf dyq0 qcdtf_alt");
 
-  AddSystematic("totalsys_detail","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec roccor_noresidual roccor_residual dyalphaS dymuf dymur dypdf zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0 tttheory");
+
+  AddSystematic("totalsys_detail","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec roccor_noresidual roccor_residual dyscale dypdf zptweight noweakweight dyisr dyfsr tttheory");
 
   AddSystematic("etc_0bjet","etc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec");
   AddSystematic("totalsys_table_0bjet","syst. unc.",Systematic::Type::MULTI,"dypdf dytheory_nopdf tttheory roccor etc_0bjet");
@@ -510,7 +536,7 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("totalsys_table_nbjet","syst. unc.",Systematic::Type::MULTI,"dytheory tttheory bcharge etc_nbjet");
 
 
-  AddSystematic("test","totalsys",Systematic::Type::MULTI,"btag dyscale ttscale");
+  AddSystematic("test","totalsys",Systematic::Type::MULTI,"btag dyscale ttscale dylargeptscales");
 
 
   AddSystematic("sys_roccor_era","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag CFSF efficiencySF qcd JEC lumi xsec electronenergy_era muonmomentum_era");
@@ -523,7 +549,7 @@ void SKFlatPlotter::SetupSystematics(){
   AddSystematic("totalsys_test2","syst. unc.",Systematic::Type::MULTI,"sys_test dytheory tttheory");
 
   //roccor
-  AddSystematic("totalsys_roccor_detail_other","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec electronenergy_noresidual electronenergy_residual dyalphaS dymuf dymur dypdf zptweight noweakweight dyisr dyfsr dysthw2 dylargeptscales dyq0 tttheory");
+  AddSystematic("totalsys_roccor_detail_other","syst. unc.",Systematic::Type::MULTI,"PUweight prefireweight z0weight btag bcharge CFSF efficiencySF_noresidual efficiencySF_residual qcd JEC lumi xsec electronenergy_noresidual electronenergy_residual dyalphaS dymuf dymur dypdf zptweight noweakweight dyisr dyfsr dylargeptscales dyq0 tttheory");
   //AddSystematic("totalsys_roccor_detail","syst. unc.",Systematic::Type::MULTI,"totalsys_roccor_detail_other muonmomentum_stat muonmomentum_sys2 muonmomentum_sys3 muonmomentum_sys4 muonmomentum_sys5 muonmomentum_residual muonmomentum_sys2_2016preVFP muonmomentum_sys3_2016preVFP muonmomentum_sys4_2016preVFP muonmomentum_sys5_2016preVFP muonmomentum_residual_2016preVFP muonmomentum_sys2_2016postVFP muonmomentum_sys3_2016postVFP muonmomentum_sys4_2016postVFP muonmomentum_sys5_2016postVFP muonmomentum_residual_2016postVFP muonmomentum_sys2_2017 muonmomentum_sys3_2017 muonmomentum_sys4_2017 muonmomentum_sys5_2017 muonmomentum_residual_2017 muonmomentum_sys2_2018 muonmomentum_sys3_2018 muonmomentum_sys4_2018 muonmomentum_sys5_2018 muonmomentum_residual_2018");
   AddSystematic("totalsys_roccor_detail","syst. unc.",Systematic::Type::MULTI,"totalsys_roccor_detail_other muonmomentum_stat muonmomentum_sys2 muonmomentum_sys3 muonmomentum_sys4 muonmomentum_sys5 muonmomentum_residual_2016preVFP muonmomentum_residual_2016postVFP muonmomentum_residual_2017 muonmomentum_residual_2018");
 
